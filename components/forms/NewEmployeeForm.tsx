@@ -146,7 +146,8 @@ export default function NewEmployeeForm({ areas }: NewEmployeeFormProps) {
             name="fechaNac"
             id="fechaNac"
             required
-            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground cursor-pointer focus:outline-none"
+            defaultValue={fechaHoy}
+            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground cursor-pointer focus:outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer"
           />
         </div>
 
@@ -202,7 +203,7 @@ export default function NewEmployeeForm({ areas }: NewEmployeeFormProps) {
             id="fechaIngreso"
             required
             defaultValue={fechaHoy}
-            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground cursor-pointer focus:outline-none"
+            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground cursor-pointer focus:outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer"
           />
         </div>
 
@@ -215,7 +216,7 @@ export default function NewEmployeeForm({ areas }: NewEmployeeFormProps) {
             id="contratoInicio"
             required
             defaultValue={fechaHoy}
-            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground cursor-pointer focus:outline-none"
+            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground cursor-pointer focus:outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer"
           />
         </div>
 
@@ -228,7 +229,7 @@ export default function NewEmployeeForm({ areas }: NewEmployeeFormProps) {
             id="contratoFin"
             required
             defaultValue={fechaHoy}
-            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground cursor-pointer focus:outline-none"
+            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground cursor-pointer focus:outline-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer"
           />
         </div>
 
