@@ -4,82 +4,139 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export default async function NuevoEmpleadoPage() {
-  // Obtenemos las áreas (cargos) dinámicamente de la base de datos para el <select>
   const [rows] = await pool.query('SELECT AreCodigo, AreNombre FROM T_Area');
   const areas = rows as any[];
 
-  // Componente de Formulario que usa Server Actions
   async function handleSubmit(formData: FormData) {
-    'use server'; // Indicamos que esta función corre en el backend
+    'use server';
     await agregarEmpleado(formData);
-    redirect('/'); // Al terminar, regresa a la página principal
+    redirect('/');
   }
 
   return (
-    <main className="p-8 max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-700">Agregar Nuevo Empleado</h1>
-        <Link href="/" className="text-blue-600 hover:underline">
-          &larr; Volver
+    <main className="min-h-screen p-8 lg:p-12 max-w-3xl mx-auto">
+      
+      {/* Header moderno con enlace de retroceso integrado */}
+      <div className="mb-8">
+        <Link 
+          href="/" 
+          className="inline-flex items-center text-sm font-medium text-muted hover:text-foreground transition-colors mb-4"
+        >
+          &larr; Volver al tablero
         </Link>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Nuevo Empleado</h1>
+        <p className="text-muted mt-1">Registra los datos personales y asigna el cargo inicial.</p>
       </div>
 
-      <form action={handleSubmit} className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Tarjeta del Formulario */}
+      <form action={handleSubmit} className="bg-surface border border-border rounded-xl shadow-card p-6 md:p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* Código de Empleado (Ej: EMP00002) */}
+          {/* Código de Empleado */}
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Código de Empleado</label>
-            <input type="text" name="codigo" required placeholder="EMP00002" maxLength={8}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">Código de Empleado</label>
+            <input 
+              type="text" 
+              name="codigo" 
+              required 
+              placeholder="EMP00002" 
+              maxLength={8}
+              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm" 
+            />
           </div>
 
-          {/* DNI (Validación estricta de 8 dígitos) */}
+          {/* DNI */}
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">DNI</label>
-            <input type="text" name="dni" required pattern="\d{8}" title="El DNI debe tener exactamente 8 dígitos numéricos" maxLength={8}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">DNI</label>
+            <input 
+              type="text" 
+              name="dni" 
+              required 
+              pattern="\d{8}" 
+              title="El DNI debe tener exactamente 8 dígitos numéricos" 
+              maxLength={8}
+              placeholder="12345678"
+              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm" 
+            />
           </div>
 
+          {/* Nombres */}
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
-            <input type="text" name="nombres" required
-              className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">Nombres</label>
+            <input 
+              type="text" 
+              name="nombres" 
+              required
+              placeholder="Ej. Juan Carlos"
+              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm" 
+            />
           </div>
 
+          {/* Apellidos */}
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos (Paterno y Materno)</label>
-            <div className="flex gap-2">
-              <input type="text" name="apePaterno" required placeholder="Paterno"
-                className="w-1/2 p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" />
-              <input type="text" name="apeMaterno" required placeholder="Materno"
-                className="w-1/2 p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">Apellidos (Paterno y Materno)</label>
+            <div className="flex gap-3">
+              <input 
+                type="text" 
+                name="apePaterno" 
+                required 
+                placeholder="Paterno"
+                className="w-1/2 px-3 py-2 bg-transparent border border-border rounded-lg text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm" 
+              />
+              <input 
+                type="text" 
+                name="apeMaterno" 
+                required 
+                placeholder="Materno"
+                className="w-1/2 px-3 py-2 bg-transparent border border-border rounded-lg text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm" 
+              />
             </div>
           </div>
 
+          {/* Género */}
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Género</label>
-            <select name="genero" required className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500">
+            <label className="block text-sm font-medium text-foreground mb-1.5">Género</label>
+            <select 
+              name="genero" 
+              required 
+              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm cursor-pointer appearance-none"
+            >
               <option value="M">Masculino</option>
               <option value="F">Femenino</option>
             </select>
           </div>
 
+          {/* Fecha de Nacimiento */}
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</label>
-            <input type="date" name="fechaNac" required
-              className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">Fecha de Nacimiento</label>
+            <input 
+              type="date" 
+              name="fechaNac" 
+              required
+              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm cursor-pointer" 
+            />
           </div>
 
+          {/* Correo */}
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-            <input type="email" name="correo" required
-              className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">Correo Electrónico</label>
+            <input 
+              type="email" 
+              name="correo" 
+              required
+              placeholder="juan@empresa.com"
+              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm" 
+            />
           </div>
 
+          {/* Área / Cargo */}
           <div className="col-span-2 md:col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Área / Cargo (Salario Base)</label>
-            <select name="area" required className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500">
+            <label className="block text-sm font-medium text-foreground mb-1.5">Área / Cargo Inicial</label>
+            <select 
+              name="area" 
+              required 
+              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm cursor-pointer appearance-none"
+            >
               {areas.map(area => (
                 <option key={area.AreCodigo} value={area.AreCodigo}>
                   {area.AreNombre}
@@ -90,8 +147,20 @@ export default async function NuevoEmpleadoPage() {
 
         </div>
 
-        <div className="mt-8 flex justify-end">
-          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded transition">
+        {/* Separador sutil antes de los botones */}
+        <hr className="my-8 border-border" />
+
+        <div className="flex justify-end gap-3">
+          <Link 
+            href="/"
+            className="px-6 py-2.5 text-sm font-medium text-foreground bg-surface border border-border rounded-lg hover:bg-surface-hover transition-colors shadow-sm"
+          >
+            Cancelar
+          </Link>
+          <button 
+            type="submit" 
+            className="px-6 py-2.5 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors shadow-sm"
+          >
             Guardar Empleado
           </button>
         </div>

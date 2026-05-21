@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Paleta Base (Light Mode) */
+  --bg-base: #f8fafc; /* Fondo general de la app */
+  --bg-surface: #ffffff; /* Fondo de tarjetas y tablas */
+  --bg-surface-hover: #f1f5f9;
+  
+  --text-main: #0f172a; /* Texto principal oscuro */
+  --text-muted: #64748b; /* Texto secundario/etiquetas */
+  
+  --border-subtle: #e2e8f0; /* Bordes delicados */
+  
+  /* Colores de Marca y Estado */
+  --color-brand: #2563eb;
+  --color-brand-hover: #1d4ed8;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Paleta Base (Dark Mode) */
+    --bg-base: #020617;
+    --bg-surface: #0f172a;
+    --bg-surface-hover: #1e293b;
+    
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    
+    --border-subtle: #334155;
+    
+    --color-brand: #3b82f6;
+    --color-brand-hover: #60a5fa;
   }
 }
 
+@theme inline {
+  /* Inyectamos nuestras variables a las clases de Tailwind */
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-main);
+  
+  --color-surface: var(--bg-surface);
+  --color-surface-hover: var(--bg-surface-hover);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border-subtle);
+  
+  --color-brand: var(--color-brand);
+  --color-brand-hover: var(--color-brand-hover);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+
+  /* Sombras más modernas y suaves tipo Stripe */
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-base);
+  color: var(--text-main);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased; /* Suaviza el texto para que se vea más limpio */
 }
