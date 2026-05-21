@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import * as XLSX from 'xlsx';
 
-export async function GET(request: Request, { params }: { params: { codigo: string } }) {
-  const codigo = params.codigo;
+// 1. El tipo de params ahora es un Promise
+export async function GET(
+  request: Request, 
+  context: { params: Promise<{ codigo: string }> }
+) {
+  // 2. Debes hacer "await" a params antes de usar su valor
+  const { codigo } = await context.params;
 
   try {
     const [rows] = await pool.query(`
@@ -18,12 +23,10 @@ export async function GET(request: Request, { params }: { params: { codigo: stri
     const emp = (rows as any[])[0];
     if (!emp) return NextResponse.json({ error: 'Empleado no encontrado' }, { status: 404 });
 
-    // RF01: Precisión de cálculos a 2 decimales
     const salario = Number(emp.Salario);
     const gratificacion = 300.00;
     const total = salario + gratificacion;
 
-    // Estructurar datos para el Excel
     const datosBoleta = [
       { Concepto: 'Nombres', Detalle: `${emp.EmpNombres} ${emp.EmpApePaterno}` },
       { Concepto: 'DNI', Detalle: emp.EmpDNI },
@@ -33,15 +36,12 @@ export async function GET(request: Request, { params }: { params: { codigo: stri
       { Concepto: 'TOTAL A PAGAR', Detalle: total.toFixed(2) }
     ];
 
-    // Crear el libro de Excel
     const worksheet = XLSX.utils.json_to_sheet(datosBoleta);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Boleta de Pago');
 
-    // Convertir a buffer binario
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
 
-    // Enviar archivo al navegador
     return new NextResponse(excelBuffer, {
       headers: {
         'Content-Disposition': `attachment; filename="Boleta_${codigo}.xlsx"`,
