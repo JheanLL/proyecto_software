@@ -1,7 +1,7 @@
 import pool from '@/lib/db';
 import Link from 'next/link';
-import FormSalario from './FormSalario';
-import { modificarSalario } from '@/app/actions';
+import FormSalario from '@/components/forms/FormSalario';
+import { modificarSalario } from '@/actions/empleados';
 import { redirect } from 'next/navigation';
 
 export default async function PerfilEmpleadoPage({ 

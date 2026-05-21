@@ -1,6 +1,6 @@
 import pool from "@/lib/db";
 import Link from "next/link";
-import NewEmployeeForm from "@/components/NewEmployeeForm";
+import NewEmployeeForm from "@/components/forms/NewEmployeeForm";
 
 export default async function NuevoEmpleadoPage() {
   // Cambiado a la nueva tabla AREA_TRABAJO con sus columnas reales

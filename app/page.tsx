@@ -3,8 +3,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { logoutAction } from "@/app/actions/auth";
-import LogoutButton from "@/components/LogoutButton";
-import Logo from "@/components/Logo";
+import LogoutButton from "@/components/ui/LogoutButton";
+import Logo from "@/components/ui/Logo";
 
 export default async function Page() {
   // 1. Obtener el nombre del usuario logueado desde la Cookie JWT
