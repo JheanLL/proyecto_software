@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { logoutAction } from "@/app/actions/auth";
 import LogoutButton from "@/components/LogoutButton";
+import Logo from "@/components/Logo";
 
 export default async function Page() {
   // 1. Obtener el nombre del usuario logueado desde la Cookie JWT
@@ -32,7 +33,8 @@ export default async function Page() {
       COALESCE(e.EmpSalario, a.AreaSalario) AS SalarioFinal
     FROM EMPLEADO e
     INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
-  `);
+    ORDER BY CAST(SUBSTRING(e.EmpCodigo, 4) AS UNSIGNED) DESC  
+`);
 
   const empleados = rows as any[];
 
@@ -124,6 +126,12 @@ export default async function Page() {
                 </span>
                 Informe General
               </a>
+              <Link
+                href="/boletas"
+                className="px-4 py-2 bg-surface text-foreground border border-border rounded-lg hover:bg-surface-hover transition-colors font-medium text-sm shadow-sm"
+              >
+                💵 Historial Planillas
+              </Link>
               <Link
                 href="/empleados/nuevo"
                 className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors font-medium text-sm shadow-sm"

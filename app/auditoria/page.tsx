@@ -19,14 +19,32 @@ export default async function AuditoriaPage() {
   
   const registros = rows as any[];
 
-  // Asignación de badges según la naturaleza de la alteración registrada
+  // Asignación de badges según la naturaleza exacta de la alteración
   const getBadgeStyle = (campo: string) => {
     const act = (campo || "").toLowerCase();
-    if (act.includes("alta") || act.includes("crea"))
-      return "bg-success/10 text-success border-success/20";
+    
+    // 1. Nuevos Empleados (Verde Esmeralda)
+    if (act.includes("registro") || act.includes("alta"))
+      return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
+      
+    // 2. Temas de Dinero / Salarios (Azul)
+    if (act.includes("salario") || act.includes("sueldo"))
+      return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+
+    // 3. Creación de nuevas Áreas (Verde Azulado / Teal)
+    if (act.includes("creación") || act.includes("creacion"))
+      return "bg-teal-500/10 text-teal-600 border-teal-500/20";
+
+    // 4. Modificación de Áreas / Cargos existentes (Morado / Índigo)
+    if (act.includes("área") || act.includes("area") || act.includes("modificación"))
+      return "bg-indigo-500/10 text-indigo-600 border-indigo-500/20";
+
+    // 5. Eliminaciones o Bajas (Rojo)
     if (act.includes("baja") || act.includes("elimin"))
       return "bg-red-500/10 text-red-600 border-red-500/20";
-    return "bg-warning/10 text-warning border-warning/20";
+
+    // 6. Por defecto / Otros cambios (Gris Pizarra)
+    return "bg-slate-500/10 text-slate-600 border-slate-500/20";
   };
 
   return (
