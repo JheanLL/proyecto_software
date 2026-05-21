@@ -81,22 +81,6 @@ export default async function Page() {
           </div>
 
           <div className="flex flex-col items-start lg:items-end gap-4">
-            {/* Panel de Usuario Logueado */}
-            <div className="flex items-center gap-3 bg-surface border border-border px-4 py-2 rounded-lg shadow-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-brand/10 text-brand flex items-center justify-center text-xs font-bold uppercase">
-                  {userName.charAt(0)}
-                </div>
-                <span className="text-sm font-medium text-foreground">
-                  {userName}
-                </span>
-              </div>
-              <div className="w-px h-4 bg-border"></div>
-
-              {/* AQUI USAMOS EL NUEVO BOTÓN */}
-              <LogoutButton />
-            </div>
-
             {/* Botones de Acción Originales */}
             <div className="flex flex-wrap items-center gap-3">
               <Link
