@@ -6,7 +6,7 @@ const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || "mi_clave_secreta_super_segura_para_desarrollo"
 );
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Obtener la cookie
   const token = request.cookies.get('auth_token')?.value;
   const { pathname } = request.nextUrl;
