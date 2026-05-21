@@ -1,17 +1,15 @@
 import pool from '@/lib/db';
 import Link from 'next/link';
-import NewCargoForm from '@/components/NewCargoForm';
-import EditCargoForm from '@/components/EditCargoForm';
+import NewCargoForm from '@/components/forms/NewCargoForm';
+import EditCargoForm from '@/components/forms/EditCargoForm';
 
 export default async function CargosPage() {
-  // Cambiado a la nueva tabla AREA_TRABAJO con sus columnas e identificadores reales
   const [rows] = await pool.query('SELECT AreaID, AreaNombre, AreaSalario FROM AREA_TRABAJO');
   const cargos = rows as any[];
 
   return (
-    <main className="min-h-screen p-8 lg:p-12 max-w-5xl mx-auto">
+    <main className="min-h-screen p-4 sm:p-8 lg:p-12 max-w-5xl mx-auto">
       
-      {/* Header Moderno */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Gestión de Cargos</h1>
@@ -25,33 +23,23 @@ export default async function CargosPage() {
         </Link>
       </div>
 
-      {/* Formulario para CREAR nuevo cargo */}
       <NewCargoForm />
 
-      {/* Tarjeta de la Tabla de EDICIÓN */}
-      <div className="bg-surface border border-border rounded-xl shadow-card overflow-hidden">
+      <div className="bg-surface border border-border rounded-xl shadow-card overflow-hidden mt-8">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-left">
+          <table className="w-full text-sm text-left">
             <thead className="bg-surface-hover text-muted text-xs uppercase tracking-wider border-b border-border">
               <tr>
-                <th className="px-6 py-4 font-semibold w-24">ID</th>
-                <th className="px-6 py-4 font-semibold w-1/3">Nombre del Cargo / Área</th>
-                <th className="px-6 py-4 font-semibold w-1/3">Salario Base</th>
-                <th className="px-6 py-4 font-semibold text-center">Acción</th>
+                <th className="px-6 py-4 font-semibold w-16 whitespace-nowrap">ID</th>
+                <th className="px-6 py-4 font-semibold min-w-[200px]">Nombre del Cargo / Área</th>
+                <th className="px-6 py-4 font-semibold min-w-[150px]">Salario Base</th>
+                <th className="px-6 py-4 font-semibold text-center w-32 whitespace-nowrap">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {cargos.map((cargo) => (
-                <tr key={cargo.AreaID} className="hover:bg-surface-hover/50 transition-colors group">
-                  <td className="px-6 py-4 font-mono text-muted text-xs">
-                    {/* Formatea el ID numérico con ceros a la izquierda */}
-                    {String(cargo.AreaID).padStart(2, '0')}
-                  </td>
-                  <td colSpan={3} className="p-0">
-                    {/* Enviamos el objeto con el tipado corregido hacia el formulario */}
-                    <EditCargoForm cargo={cargo} />
-                  </td>
-                </tr>
+                // Ahora EditCargoForm envuelve toda la fila <tr>, no va dentro de un <td>
+                <EditCargoForm key={cargo.AreaID} cargo={cargo} />
               ))}
             </tbody>
           </table>
