@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import toast from 'react-hot-toast';
 
 export default function FormSalario({ 
   empCodigo, 
@@ -9,23 +10,59 @@ export default function FormSalario({
 }: { 
   empCodigo: string, 
   salarioActual: number,
-  modificarSalarioAction: (codigo: string, nuevoSalario: number) => Promise<void>
+  modificarSalarioAction: (codigo: string, nuevoSalario: number) => Promise<{ success: boolean, message: string }>
 }) {
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e : React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     const formData = new FormData(e.currentTarget);
     const nuevoSalario = Number(formData.get('nuevoSalario'));
 
-    const confirmado = window.confirm(`¿Estás seguro de cambiar el salario a S/. ${nuevoSalario.toFixed(2)}? \n\nEsta acción quedará registrada en la Auditoría.`);
-    
-    if (confirmado) {
-      await modificarSalarioAction(empCodigo, nuevoSalario);
-      alert('Salario modificado exitosamente.');
-      formRef.current?.reset();
-    }
+    // Toast de confirmación personalizado
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="font-medium text-sm">
+          ¿Estás seguro de cambiar el salario a <b>S/. {nuevoSalario.toFixed(2)}</b>?
+          <br />
+          <span className="text-xs text-muted-foreground font-normal">Esta acción quedará registrada en auditoría.</span>
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 text-xs font-medium rounded-md border border-border hover:bg-surface-hover transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const loadingToast = toast.loading('Actualizando salario...');
+              try {
+                const result = await modificarSalarioAction(empCodigo, nuevoSalario);
+                if (result.success) {
+                  toast.success(result.message, { id: loadingToast });
+                  formRef.current?.reset();
+                } else {
+                  toast.error(result.message, { id: loadingToast });
+                }
+              } catch (error) {
+                toast.error('Ocurrió un error inesperado', { id: loadingToast });
+              }
+            }}
+            className="px-3 py-1.5 text-xs font-medium bg-brand text-white rounded-md hover:bg-brand-hover transition-colors"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 6000,
+      position: 'top-center',
+    });
   };
 
   return (
@@ -33,7 +70,7 @@ export default function FormSalario({
       <div className="flex flex-col md:flex-row gap-4 items-end">
         
         <div className="flex-grow w-full">
-          <label className="block text-sm font-medium text-foreground mb-1.5">
+          <label htmlFor="nuevoSalario" className="block text-sm font-medium text-foreground mb-1.5">
             Modificar Salario (S/.)
           </label>
           <div className="relative">
@@ -43,6 +80,7 @@ export default function FormSalario({
             <input 
               type="number" 
               name="nuevoSalario" 
+              id="nuevoSalario"
               step="0.01" 
               required 
               defaultValue={salarioActual}

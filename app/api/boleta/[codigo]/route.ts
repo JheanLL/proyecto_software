@@ -9,22 +9,27 @@ export async function GET(
   const { codigo } = await context.params;
 
   try {
+    // Consulta adaptada al modelo unificado y mapeo real de columnas
     const [rows] = await pool.query(`
-      SELECT e.EmpNombres, e.EmpApePaterno, e.EmpDNI, a.AreNombre,
-      c.ConFechaIngreso,
-      COALESCE(c.ConSalarioModificado, a.AreSalarioBase) AS Salario
-      FROM T_Empleado e
-      INNER JOIN T_Area a ON e.AreCodigo = a.AreCodigo
-      INNER JOIN T_CondicionLaboral c ON e.EmpCodigo = c.EmpCodigo
+      SELECT 
+        e.EmpNombres, 
+        e.EmpApellidoPaterno, 
+        e.EmpDni, 
+        a.AreaNombre,
+        e.EmpFechaIngreso,
+        COALESCE(e.EmpSalario, a.AreaSalario) AS Salario
+      FROM EMPLEADO e
+      INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
       WHERE e.EmpCodigo = ?
     `, [codigo]);
 
     const emp = (rows as any[])[0];
     if (!emp) return NextResponse.json({ error: 'Empleado no encontrado' }, { status: 404 });
 
-    // Algoritmo de años, meses y días
-    const fechaIngreso = new Date(emp.ConFechaIngreso);
+    // Algoritmo de años, meses y días corrigiendo el huso horario local (Perú)
+    const fechaIngreso = new Date(emp.EmpFechaIngreso);
     const hoy = new Date();
+    
     let anios = hoy.getFullYear() - fechaIngreso.getFullYear();
     let meses = hoy.getMonth() - fechaIngreso.getMonth();
     let dias = hoy.getDate() - fechaIngreso.getDate();
@@ -38,7 +43,7 @@ export async function GET(
       meses += 12;
     }
     
-    // CORRECCIÓN: Prevenir negativos por la diferencia de zona horaria (UTC vs Perú)
+    // Prevenir distorsiones o valores negativos por desfases UTC vs. América/Lima
     if (fechaIngreso > hoy || anios < 0) {
       anios = 0;
       meses = 0;
@@ -48,14 +53,14 @@ export async function GET(
     const antiguedadExacta = `${anios} años, ${meses} meses, ${dias} días`;
     const salarioMensual = Number(emp.Salario);
 
-    // Formato de Boleta de Pago Empresarial
+    // Formato estructurado de la Boleta de Pago Individual
     const datosBoleta = [
       { Concepto: 'EMPRESA', Detalle: 'NÓMINA DE PAGO - BOLETA INDIVIDUAL' },
       { Concepto: '', Detalle: '' },
       { Concepto: 'DATOS DEL TRABAJADOR', Detalle: '-------------------------' },
-      { Concepto: 'Nombres y Apellidos', Detalle: `${emp.EmpNombres} ${emp.EmpApePaterno}` },
-      { Concepto: 'Documento de Identidad (DNI)', Detalle: emp.EmpDNI },
-      { Concepto: 'Cargo Asignado', Detalle: emp.AreNombre },
+      { Concepto: 'Nombres y Apellidos', Detalle: `${emp.EmpNombres} ${emp.EmpApellidoPaterno}` },
+      { Concepto: 'Documento de Identidad (DNI)', Detalle: emp.EmpDni },
+      { Concepto: 'Cargo / Área Asignada', Detalle: emp.AreaNombre },
       { Concepto: 'Tiempo de Servicio Exacto', Detalle: antiguedadExacta },
       { Concepto: '', Detalle: '' },
       { Concepto: 'REMUNERACIONES', Detalle: '-------------------------' },
@@ -68,6 +73,7 @@ export async function GET(
       { Concepto: 'TOTAL NETO A PAGAR EN BOLETA', Detalle: `S/. ${salarioMensual.toFixed(2)}` }
     ];
 
+    // Creación de la hoja de cálculo con Excel binario
     const worksheet = XLSX.utils.json_to_sheet(datosBoleta);
     worksheet['!cols'] = [{ wch: 45 }, { wch: 40 }];
 
@@ -76,6 +82,7 @@ export async function GET(
 
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
 
+    // Retorno del stream para descarga forzada con el código del empleado asignado
     return new NextResponse(excelBuffer, {
       headers: {
         'Content-Disposition': `attachment; filename="Boleta_Pago_${codigo}.xlsx"`,
@@ -84,6 +91,7 @@ export async function GET(
     });
 
   } catch (error) {
-    return NextResponse.json({ error: 'Error al generar Boleta' }, { status: 500 });
+    console.error("Error al generar boleta:", error);
+    return NextResponse.json({ error: 'Error al generar Boleta de Pago' }, { status: 500 });
   }
 }

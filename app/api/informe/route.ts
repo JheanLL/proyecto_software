@@ -2,36 +2,39 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import * as XLSX from 'xlsx';
 
-export const dynamic = 'force-dynamic'; // Evita que Vercel cachee este archivo
+export const dynamic = 'force-dynamic'; // Evita problemas de caché estática
 
 export async function GET() {
   try {
-    // 1. Consultamos TODOS los empleados con los datos exigidos en el RF02
+    // Consulta limpia apuntando al nuevo modelo unificado de base de datos
     const [rows] = await pool.query(`
-      SELECT e.EmpCodigo, e.EmpNombres, e.EmpApePaterno, a.AreNombre,
-      TIMESTAMPDIFF(YEAR, e.EmpFechaNac, CURDATE()) AS EdadActual,
-      c.ConFechaIngreso,
-      COALESCE(c.ConSalarioModificado, a.AreSalarioBase) AS Salario
-      FROM T_Empleado e
-      INNER JOIN T_Area a ON e.AreCodigo = a.AreCodigo
-      INNER JOIN T_CondicionLaboral c ON e.EmpCodigo = c.EmpCodigo
+      SELECT 
+        e.EmpCodigo, 
+        e.EmpNombres, 
+        e.EmpApellidoPaterno, 
+        a.AreaNombre,
+        TIMESTAMPDIFF(YEAR, e.EmpFechaNacimiento, CURDATE()) AS EdadActual,
+        e.EmpFechaIngreso,
+        COALESCE(e.EmpSalario, a.AreaSalario) AS Salario
+      FROM EMPLEADO e
+      INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
     `);
 
     const empleados = rows as any[];
 
-    // 2. Procesamos los cálculos exactos que pide el requerimiento
+    // Procesamiento y formateo JSON limpio para la exportación de la hoja
     const datosInforme = empleados.map(emp => {
       const edad = emp.EdadActual;
-      const fechaIngreso = new Date(emp.ConFechaIngreso);
+      const fechaIngreso = new Date(emp.EmpFechaIngreso);
       const hoy = new Date();
       const antiguedad = hoy.getFullYear() - fechaIngreso.getFullYear();
       const salario = Number(emp.Salario);
-      const beneficios = 600.00; // S/. 300 Julio + S/. 300 Diciembre
+      const beneficios = 600.00; // S/. 300 Julio + S/. 300 Diciembre (Fijo por normativa)
 
       return {
         'Código': emp.EmpCodigo,
-        'Nombres y Apellidos': `${emp.EmpNombres} ${emp.EmpApePaterno}`,
-        'Cargo': emp.AreNombre,
+        'Nombres y Apellidos': `${emp.EmpNombres} ${emp.EmpApellidoPaterno}`,
+        'Cargo': emp.AreaNombre,
         'Edad Actual': `${edad} años`,
         'Antigüedad en Empresa': `${antiguedad} años`,
         'Salario Base Mensual': salario.toFixed(2),
@@ -39,10 +42,9 @@ export async function GET() {
       };
     });
 
-    // 3. Generamos el Excel
+    // Generación física del libro de Excel binario
     const worksheet = XLSX.utils.json_to_sheet(datosInforme);
     
-    // Damos un ancho profesional a las columnas
     worksheet['!cols'] = [
       { wch: 12 }, // Código
       { wch: 35 }, // Nombres
@@ -58,7 +60,7 @@ export async function GET() {
 
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
 
-    // 4. Forzamos la descarga del archivo en el navegador
+    // Stream de respuesta hacia el navegador del cliente para forzar descarga
     return new NextResponse(excelBuffer, {
       headers: {
         'Content-Disposition': `attachment; filename="Informe_General_Operaciones.xlsx"`,
@@ -67,6 +69,7 @@ export async function GET() {
     });
 
   } catch (error) {
+    console.error("Error al generar Excel:", error);
     return NextResponse.json({ error: 'Error al generar Informe Excel' }, { status: 500 });
   }
 }

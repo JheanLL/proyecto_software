@@ -7,15 +7,15 @@
   --bg-surface-hover: #f1f5f9;
   
   --text-main: #0f172a; /* Texto principal oscuro */
-  --text-muted: #64748b; /* Texto secundario/etiquetas */
+  --text-muted: #475569; /* Texto secundario/etiquetas (Mejorado para contraste WCAG AA) */
   
   --border-subtle: #e2e8f0; /* Bordes delicados */
   
-  /* Colores de Marca y Estado */
+  /* Colores de Marca y Estado (Ajustados para contraste >= 4.5:1 en Light Mode) */
   --color-brand: #2563eb;
   --color-brand-hover: #1d4ed8;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
+  --color-success: #047857; /* Cambiado de #10b981 a #047857 para cumplir WCAG AA */
+  --color-warning: #b45309; /* Cambiado de #f59e0b a #b45309 para cumplir WCAG AA */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -59,4 +59,11 @@ body {
   color: var(--text-main);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased; /* Suaviza el texto para que se vea más limpio */
+}
+
+/* Mejora global de accesibilidad: Indicadores de enfoque de alto contraste (WCAG 2.4.7) */
+*:focus-visible {
+  outline: 2px solid var(--color-brand) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px var(--bg-surface) !important;
 }

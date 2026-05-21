@@ -3,7 +3,7 @@
 import pool from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-// RF01: Agregar empleado + Registro de Auditoría de Creación
+// RF01: Agregar empleado + Historial
 export async function agregarEmpleado(formData: FormData) {
   const codigo = formData.get("codigo") as string;
   const dni = formData.get("dni") as string;
@@ -14,99 +14,111 @@ export async function agregarEmpleado(formData: FormData) {
   const correo = formData.get("correo") as string;
   const area = Number(formData.get("area"));
   const fechaNac = formData.get("fechaNac") as string;
+  
+  // Usuario temporal para la auditoría (hasta conectar la sesión JWT)
+  const idUsuarioActual = 1; 
 
   try {
-    // 1. Insertar en tabla de Empleados
+    // 1. Insertar Empleado (Las fechas de ingreso van directo aquí ahora)
     await pool.query(
-      `INSERT INTO T_Empleado (EmpCodigo, EmpDNI, EmpApePaterno, EmpApeMaterno, EmpNombres, EmpGenero, EmpCorreo, AreCodigo, EmpFechaNac)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [codigo, dni, apePaterno, apeMaterno, nombres, genero, correo, area, fechaNac]
+      `INSERT INTO EMPLEADO (EmpCodigo, AreaID, EmpDNI, EmpApellidoPaterno, EmpApellidoMaterno, EmpNombres, EmpGenero, EmpCorreo, EmpFechaNacimiento, EmpFechaIngreso)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())`,
+      [codigo, area, dni, apePaterno, apeMaterno, nombres, genero, correo, fechaNac]
     );
 
-    // 2. Insertar en Condiciones Laborales
+    // 2. Historial: Alta de Empleado
     await pool.query(
-      `INSERT INTO T_CondicionLaboral (EmpCodigo, ConFechaIngreso) VALUES (?, CURDATE())`,
-      [codigo]
-    );
-
-    // 3. Auditoría: Registrar Alta de Empleado
-    await pool.query(
-      `INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
-       VALUES ('T_Empleado', 'Creación', CONCAT('Se registró al empleado: ', ?, ' ', ?, ' (', ?, ')'))`,
-      [nombres, apePaterno, codigo]
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorNuevo, UserCodigoHM)
+       VALUES (?, 'Alta de Empleado', 'Nuevo Registro', ?)`,
+      [codigo, idUsuarioActual]
     );
 
     revalidatePath("/");
+    return { success: true, message: "Empleado registrado exitosamente" };
   } catch (error) {
     console.error("Error:", error);
-    throw new Error("Error al guardar en la base de datos");
+    return { success: false, message: "Error al guardar el empleado" };
   }
 }
 
-// RF01 y RF02: Modificar salario + Registro de Auditoría
+// RF01 y RF02: Modificar salario + Historial
 export async function modificarSalario(empCodigo: string, nuevoSalario: number) {
+  const idUsuarioActual = 1;
   try {
+    // Obtener salario anterior para el registro preciso
+    const [rows]: any = await pool.query(`SELECT EmpSalario FROM EMPLEADO WHERE EmpCodigo = ?`, [empCodigo]);
+    const salarioAnterior = rows[0]?.EmpSalario || 'Sueldo Base';
+
     await pool.query(
-      `UPDATE T_CondicionLaboral SET ConSalarioModificado = ? WHERE EmpCodigo = ?`,
+      `UPDATE EMPLEADO SET EmpSalario = ? WHERE EmpCodigo = ?`,
       [nuevoSalario, empCodigo]
     );
 
     await pool.query(
-      `INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
-       VALUES ('T_CondicionLaboral', 'Modificación de Salario', CONCAT('Salario actualizado a S/. ', ?, ' para el empleado ', ?))`,
-      [nuevoSalario, empCodigo]
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM)
+       VALUES (?, 'EmpSalario', ?, ?, ?)`,
+      [empCodigo, String(salarioAnterior), String(nuevoSalario), idUsuarioActual]
     );
 
     revalidatePath("/");
+    return { success: true, message: "Salario modificado exitosamente" };
   } catch (error) {
-    throw new Error("Error al modificar salario");
+    console.error("Error al modificar salario:", error);
+    return { success: false, message: "Error al modificar el salario" };
   }
 }
 
-// RF02: Crear nuevo cargo + Registro de Auditoría
+// RF02: Crear nuevo cargo (Área)
 export async function crearCargo(formData: FormData) {
   const nombre = formData.get('nombre') as string;
   const salario = Number(formData.get('salario'));
+  const idUsuarioActual = 1;
 
   try {
     await pool.query(
-      'INSERT INTO T_Area (AreNombre, AreSalarioBase) VALUES (?, ?)', 
+      'INSERT INTO AREA_TRABAJO (AreaNombre, AreaSalario) VALUES (?, ?)', 
       [nombre, salario]
     );
     
+    // Al ser un cambio global y no de un empleado específico, EmpCodigo queda como NULL
     await pool.query(
-      `INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
-       VALUES ('T_Area', 'Creación de Cargo', CONCAT('Se creó el cargo: ', ?, ' con salario base S/. ', ?))`,
-      [nombre, salario]
+      `INSERT INTO HISTORIAL_MODIFICACIONES (CampoModificado, ValorNuevo, UserCodigoHM)
+       VALUES ('Creación de Área', CONCAT(?, ' - S/. ', ?), ?)`,
+      [nombre, salario, idUsuarioActual]
     );
 
     revalidatePath('/cargos');
+    return { success: true, message: "Cargo creado exitosamente" };
   } catch (error) {
-    throw new Error('Error al crear el cargo');
+    console.error("Error al crear cargo:", error);
+    return { success: false, message: "Error al crear el cargo" };
   }
 }
 
-// RF02: Actualizar información de cargos + Registro de Auditoría
+// RF02: Actualizar cargo (Área)
 export async function modificarCargo(formData: FormData) {
-  const areCodigo = Number(formData.get('areCodigo'));
+  const areaID = Number(formData.get('areCodigo'));
   const nuevoNombre = formData.get('nombre') as string;
   const nuevoSalario = Number(formData.get('salario'));
+  const idUsuarioActual = 1;
 
   try {
     await pool.query(
-      `UPDATE T_Area SET AreNombre = ?, AreSalarioBase = ? WHERE AreCodigo = ?`, 
-      [nuevoNombre, nuevoSalario, areCodigo]
+      `UPDATE AREA_TRABAJO SET AreaNombre = ?, AreaSalario = ? WHERE AreaID = ?`, 
+      [nuevoNombre, nuevoSalario, areaID]
     );
 
     await pool.query(
-      `INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
-       VALUES ('T_Area', 'Modificación de Cargo', CONCAT('Cargo ID ', ?, ' actualizado a: ', ?, ' - S/. ', ?))`, 
-      [areCodigo, nuevoNombre, nuevoSalario]
+      `INSERT INTO HISTORIAL_MODIFICACIONES (CampoModificado, ValorNuevo, UserCodigoHM)
+       VALUES ('Modificación de Área', CONCAT(?, ' - S/. ', ?), ?)`, 
+      [nuevoNombre, nuevoSalario, idUsuarioActual]
     );
 
     revalidatePath('/cargos');
     revalidatePath('/');
+    return { success: true, message: "Cargo actualizado exitosamente" };
   } catch (error) {
-    throw new Error('Error al modificar el cargo');
+    console.error("Error al modificar cargo:", error);
+    return { success: false, message: "Error al modificar el cargo" };
   }
 }

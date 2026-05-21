@@ -9,15 +9,19 @@ export default async function PerfilEmpleadoPage({
 }: { 
   params: Promise<{ codigo: string }> 
 }) {
-  // Await obligatorio para params en Next.js 15 (evita errores en Vercel)
+  // Await obligatorio para params en Next.js 15
   const { codigo } = await params;
 
+  // Consulta refactorizada a la nueva estructura relacional
   const [rows] = await pool.query(`
-    SELECT e.EmpCodigo, e.EmpNombres, e.EmpApePaterno, a.AreNombre,
-    COALESCE(c.ConSalarioModificado, a.AreSalarioBase) AS SalarioActual
-    FROM T_Empleado e
-    INNER JOIN T_Area a ON e.AreCodigo = a.AreCodigo
-    INNER JOIN T_CondicionLaboral c ON e.EmpCodigo = c.EmpCodigo
+    SELECT 
+      e.EmpCodigo, 
+      e.EmpNombres, 
+      e.EmpApellidoPaterno, 
+      a.AreaNombre,
+      COALESCE(e.EmpSalario, a.AreaSalario) AS SalarioActual
+    FROM EMPLEADO e
+    INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
     WHERE e.EmpCodigo = ?
   `, [codigo]);
 
@@ -31,7 +35,7 @@ export default async function PerfilEmpleadoPage({
 
   const updateAction = async (empCodigo: string, nuevoSalario: number) => {
     'use server';
-    await modificarSalario(empCodigo, nuevoSalario);
+    return await modificarSalario(empCodigo, nuevoSalario);
   };
 
   return (
@@ -43,13 +47,13 @@ export default async function PerfilEmpleadoPage({
           href="/" 
           className="inline-flex items-center text-sm font-medium text-muted hover:text-foreground transition-colors mb-4"
         >
-          &larr; Volver a la lista
+          <span aria-hidden="true">&larr;</span> Volver a la lista
         </Link>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Perfil del Empleado
         </h1>
         <p className="text-muted mt-1">
-          {emp.EmpNombres} {emp.EmpApePaterno}
+          {emp.EmpNombres} {emp.EmpApellidoPaterno}
         </p>
       </div>
 
@@ -66,7 +70,7 @@ export default async function PerfilEmpleadoPage({
             <div>
               <p className="text-sm font-medium text-muted mb-1">Cargo Actual</p>
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-brand/10 text-brand">
-                {emp.AreNombre}
+                {emp.AreaNombre}
               </span>
             </div>
             <div>
