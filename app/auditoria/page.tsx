@@ -1,68 +1,123 @@
-import pool from '@/lib/db';
-import Link from 'next/link';
+import pool from "@/lib/db";
+import Link from "next/link";
 
 export default async function AuditoriaPage() {
-  // Consultamos el historial ordenado desde el más reciente
-  const [rows] = await pool.query(`
-    SELECT 
-      AudCodigo, 
-      AudTablaAfectada, 
-      AudAccion, 
-      AudDetalle, 
-      AudFecha 
-    FROM T_Auditoria 
-    ORDER BY AudFecha DESC
-  `);
-  
+  // Obtenemos los registros ordenados desde el más reciente
+  const [rows] = await pool.query(
+    "SELECT * FROM T_Auditoria ORDER BY AudFecha DESC",
+  );
   const registros = rows as any[];
 
+  // Función auxiliar para asignar colores a los badges según la palabra clave de la acción
+  const getBadgeStyle = (accion: string) => {
+    const act = accion.toLowerCase();
+    if (act.includes("elimin"))
+      return "bg-red-500/10 text-red-600 border-red-500/20";
+    if (act.includes("modific") || act.includes("actualiz"))
+      return "bg-warning/10 text-warning border-warning/20";
+    if (act.includes("nuev") || act.includes("crea") || act.includes("insert"))
+      return "bg-success/10 text-success border-success/20";
+    return "bg-brand/10 text-brand border-brand/20";
+  };
+
   return (
-    <main className="p-8 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+    <main className="min-h-screen p-8 lg:p-12 max-w-6xl mx-auto">
+      {/* Header Moderno */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Registro de Auditoría</h1>
-          <p className="text-gray-600">Historial de modificaciones en el sistema (RF02)</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Registro de Auditoría
+          </h1>
+          <p className="text-muted mt-1">
+            Historial inmutable de operaciones y cambios en la base de datos.
+          </p>
         </div>
-        <Link href="/" className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition">
-          Volver a Empleados
+        <Link
+          href="/"
+          className="px-4 py-2 bg-surface text-foreground border border-border rounded-lg hover:bg-surface-hover transition-colors font-medium text-sm shadow-sm whitespace-nowrap"
+        >
+          &larr; Volver al tablero
         </Link>
       </div>
-      
-      <div className="overflow-x-auto shadow-sm rounded-lg">
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-gray-50 text-gray-700">
-              <th className="p-3 border-b text-left">ID</th>
-              <th className="p-3 border-b text-left">Fecha y Hora</th>
-              <th className="p-3 border-b text-left">Acción</th>
-              <th className="p-3 border-b text-left">Tabla Afectada</th>
-              <th className="p-3 border-b text-left">Detalle del Cambio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {registros.length === 0 ? (
+
+      {/* Tarjeta de la Tabla */}
+      <div className="bg-surface border border-border rounded-xl shadow-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-surface-hover text-muted text-xs uppercase tracking-wider border-b border-border">
               <tr>
-                <td colSpan={5} className="p-4 text-center text-gray-500">
-                  No hay modificaciones registradas todavía.
-                </td>
+                <th className="px-6 py-4 font-semibold w-24">ID Log</th>
+                <th className="px-6 py-4 font-semibold">Fecha y Hora</th>
+                <th className="px-6 py-4 font-semibold">Acción</th>
+                <th className="px-6 py-4 font-semibold">Tabla Afectada</th>
+                <th className="px-6 py-4 font-semibold">Detalle del Evento</th>
               </tr>
-            ) : (
-              registros.map((reg) => (
-                <tr key={reg.AudCodigo} className="hover:bg-gray-50 transition">
-                  <td className="p-3 border-b text-gray-600">{reg.AudCodigo}</td>
-                  <td className="p-3 border-b">
-                    {new Date(reg.AudFecha).toLocaleString('es-PE', { 
-                      timeZone: 'America/Lima' 
-                    })}
+            </thead>
+            <tbody className="divide-y divide-border">
+              {registros.map((reg) => {
+                const fecha = new Date(reg.AudFecha).toLocaleString("es-PE", {
+                  timeZone: "America/Lima",
+                });
+
+                return (
+                  <tr
+                    key={reg.AudCodigo}
+                    className="hover:bg-surface-hover/50 transition-colors"
+                  >
+                    {/* ID */}
+                    <td className="px-6 py-4 font-mono text-muted text-xs">
+                      #{String(reg.AudCodigo).padStart(4, "0")}
+                    </td>
+
+                    {/* Fecha */}
+                    <td className="px-6 py-4 whitespace-nowrap text-foreground tabular-nums">
+                      {fecha}
+                    </td>
+
+                    {/* Acción con Badge Dinámico */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getBadgeStyle(reg.AudAccion)}`}
+                      >
+                        {reg.AudAccion}
+                      </span>
+                    </td>
+
+                    {/* Tabla Afectada */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-surface-hover border border-border text-muted">
+                        {reg.AudTablaAfectada}
+                      </span>
+                    </td>
+
+                    {/* Detalle */}
+                    <td className="px-6 py-4 text-muted min-w-[300px]">
+                      {reg.AudDetalle}
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {/* Estado Vacío */}
+              {registros.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-hover mb-3">
+                      <span className="text-xl">🛡️</span>
+                    </div>
+                    <h3 className="text-sm font-medium text-foreground">
+                      Sistema sin alteraciones
+                    </h3>
+                    <p className="text-sm text-muted mt-1">
+                      Aún no se han registrado eventos de modificación en la
+                      base de datos.
+                    </p>
                   </td>
-                  <td className="p-3 border-b font-medium text-blue-600">{reg.AudAccion}</td>
-                  <td className="p-3 border-b text-gray-600 font-mono text-sm">{reg.AudTablaAfectada}</td>
-                  <td className="p-3 border-b text-gray-800">{reg.AudDetalle}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   );

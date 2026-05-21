@@ -8,6 +8,7 @@ const pool = mysql.createPool({
   port: Number(process.env.DB_PORT),
   ssl: { rejectUnauthorized: false },
   connectionLimit: 10,
+  timezone: "Z",
 });
 
 export default pool;

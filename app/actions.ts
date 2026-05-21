@@ -3,7 +3,7 @@
 import pool from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-// RF01: Agregar empleado
+// RF01: Agregar empleado + Registro de Auditoría de Creación
 export async function agregarEmpleado(formData: FormData) {
   const codigo = formData.get("codigo") as string;
   const dni = formData.get("dni") as string;
@@ -18,58 +18,43 @@ export async function agregarEmpleado(formData: FormData) {
   try {
     // 1. Insertar en tabla de Empleados
     await pool.query(
-      `
-      INSERT INTO T_Empleado (EmpCodigo, EmpDNI, EmpApePaterno, EmpApeMaterno, EmpNombres, EmpGenero, EmpCorreo, AreCodigo, EmpFechaNac)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-      [
-        codigo,
-        dni,
-        apePaterno,
-        apeMaterno,
-        nombres,
-        genero,
-        correo,
-        area,
-        fechaNac,
-      ],
+      `INSERT INTO T_Empleado (EmpCodigo, EmpDNI, EmpApePaterno, EmpApeMaterno, EmpNombres, EmpGenero, EmpCorreo, AreCodigo, EmpFechaNac)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [codigo, dni, apePaterno, apeMaterno, nombres, genero, correo, area, fechaNac]
     );
 
-    // 2. Insertar en Condiciones Laborales (Por defecto asume fecha de ingreso HOY y contrato de 1 año)
+    // 2. Insertar en Condiciones Laborales
     await pool.query(
-      `
-      INSERT INTO T_CondicionLaboral (EmpCodigo, ConFechaInicio, ConFechaFin, ConFechaIngreso) 
-      VALUES (?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 YEAR), CURDATE())
-    `,
-      [codigo],
+      `INSERT INTO T_CondicionLaboral (EmpCodigo, ConFechaIngreso) VALUES (?, CURDATE())`,
+      [codigo]
     );
+
+    // 3. Auditoría: Registrar Alta de Empleado
+    await pool.query(
+      `INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
+       VALUES ('T_Empleado', 'Creación', CONCAT('Se registró al empleado: ', ?, ' ', ?, ' (', ?, ')'))`,
+      [nombres, apePaterno, codigo]
+    );
+
+    revalidatePath("/");
   } catch (error) {
     console.error("Error:", error);
     throw new Error("Error al guardar en la base de datos");
   }
 }
 
-// RF01 y RF02: Modificar salario y guardar auditoría
-export async function modificarSalario(
-  empCodigo: string,
-  nuevoSalario: number,
-) {
+// RF01 y RF02: Modificar salario + Registro de Auditoría
+export async function modificarSalario(empCodigo: string, nuevoSalario: number) {
   try {
-    // 1. Actualizar salario
     await pool.query(
-      `
-      UPDATE T_CondicionLaboral SET ConSalarioModificado = ? WHERE EmpCodigo = ?
-    `,
-      [nuevoSalario, empCodigo],
+      `UPDATE T_CondicionLaboral SET ConSalarioModificado = ? WHERE EmpCodigo = ?`,
+      [nuevoSalario, empCodigo]
     );
 
-    // 2. RF02: Registro de auditoría
     await pool.query(
-      `
-      INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
-      VALUES ('T_CondicionLaboral', 'Modificación de Salario', CONCAT('Salario actualizado a ', ?, ' para el empleado ', ?))
-    `,
-      [nuevoSalario, empCodigo],
+      `INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
+       VALUES ('T_CondicionLaboral', 'Modificación de Salario', CONCAT('Salario actualizado a S/. ', ?, ' para el empleado ', ?))`,
+      [nuevoSalario, empCodigo]
     );
 
     revalidatePath("/");
@@ -78,24 +63,49 @@ export async function modificarSalario(
   }
 }
 
-// RF02: Actualizar información de cargos
+// RF02: Crear nuevo cargo + Registro de Auditoría
+export async function crearCargo(formData: FormData) {
+  const nombre = formData.get('nombre') as string;
+  const salario = Number(formData.get('salario'));
+
+  try {
+    await pool.query(
+      'INSERT INTO T_Area (AreNombre, AreSalarioBase) VALUES (?, ?)', 
+      [nombre, salario]
+    );
+    
+    await pool.query(
+      `INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
+       VALUES ('T_Area', 'Creación de Cargo', CONCAT('Se creó el cargo: ', ?, ' con salario base S/. ', ?))`,
+      [nombre, salario]
+    );
+
+    revalidatePath('/cargos');
+  } catch (error) {
+    throw new Error('Error al crear el cargo');
+  }
+}
+
+// RF02: Actualizar información de cargos + Registro de Auditoría
 export async function modificarCargo(formData: FormData) {
   const areCodigo = Number(formData.get('areCodigo'));
   const nuevoNombre = formData.get('nombre') as string;
   const nuevoSalario = Number(formData.get('salario'));
 
   try {
-    await pool.query(`
-      UPDATE T_Area SET AreNombre = ?, AreSalarioBase = ? WHERE AreCodigo = ?
-    `, [nuevoNombre, nuevoSalario, areCodigo]);
+    await pool.query(
+      `UPDATE T_Area SET AreNombre = ?, AreSalarioBase = ? WHERE AreCodigo = ?`, 
+      [nuevoNombre, nuevoSalario, areCodigo]
+    );
 
-    await pool.query(`
-      INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
-      VALUES ('T_Area', 'Modificación de Cargo', CONCAT('Cargo ID ', ?, ' actualizado a: ', ?, ' - S/. ', ?))
-    `, [areCodigo, nuevoNombre, nuevoSalario]);
+    await pool.query(
+      `INSERT INTO T_Auditoria (AudTablaAfectada, AudAccion, AudDetalle)
+       VALUES ('T_Area', 'Modificación de Cargo', CONCAT('Cargo ID ', ?, ' actualizado a: ', ?, ' - S/. ', ?))`, 
+      [areCodigo, nuevoNombre, nuevoSalario]
+    );
 
     revalidatePath('/cargos');
-    revalidatePath('/'); // Recarga también la tabla principal por si cambió el sueldo base
+    revalidatePath('/');
   } catch (error) {
     throw new Error('Error al modificar el cargo');
   }

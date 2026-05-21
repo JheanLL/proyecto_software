@@ -99,7 +99,7 @@ export default async function NuevoEmpleadoPage() {
             <select 
               name="genero" 
               required 
-              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm cursor-pointer appearance-none"
+              className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm cursor-pointer appearance-none"
             >
               <option value="M">Masculino</option>
               <option value="F">Femenino</option>
@@ -135,7 +135,7 @@ export default async function NuevoEmpleadoPage() {
             <select 
               name="area" 
               required 
-              className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm cursor-pointer appearance-none"
+              className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all shadow-sm cursor-pointer appearance-none"
             >
               {areas.map(area => (
                 <option key={area.AreCodigo} value={area.AreCodigo}>
