@@ -6,6 +6,8 @@ import { logoutAction } from "@/app/actions/auth";
 import LogoutButton from "@/components/ui/LogoutButton";
 import Logo from "@/components/ui/Logo";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   // 1. Obtener el nombre del usuario logueado desde la Cookie JWT
   let userName = "Usuario";
