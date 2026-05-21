@@ -9,7 +9,6 @@ export async function GET(
   const { codigo } = await context.params;
 
   try {
-    // Consulta adaptada al modelo unificado y mapeo real de columnas
     const [rows] = await pool.query(`
       SELECT 
         e.EmpNombres, 
@@ -26,7 +25,6 @@ export async function GET(
     const emp = (rows as any[])[0];
     if (!emp) return NextResponse.json({ error: 'Empleado no encontrado' }, { status: 404 });
 
-    // Algoritmo de años, meses y días corrigiendo el huso horario local (Perú)
     const fechaIngreso = new Date(emp.EmpFechaIngreso);
     const hoy = new Date();
     
@@ -43,7 +41,6 @@ export async function GET(
       meses += 12;
     }
     
-    // Prevenir distorsiones o valores negativos por desfases UTC vs. América/Lima
     if (fechaIngreso > hoy || anios < 0) {
       anios = 0;
       meses = 0;
@@ -53,8 +50,27 @@ export async function GET(
     const antiguedadExacta = `${anios} años, ${meses} meses, ${dias} días`;
     const salarioMensual = Number(emp.Salario);
 
-    // Formato estructurado de la Boleta de Pago Individual
-    const datosBoleta = [
+    // ==========================================
+    // LÓGICA DINÁMICA DE GRATIFICACIÓN
+    // ==========================================
+    const mesActual = hoy.getMonth(); // Enero es 0, Julio es 6, Diciembre es 11
+    let montoGratificacion = 0;
+    let nombreGratificacion = '';
+
+    if (mesActual === 6) {
+      montoGratificacion = 300.00;
+      nombreGratificacion = 'Gratificación Fiestas Patrias (Julio)';
+    } else if (mesActual === 11) {
+      montoGratificacion = 300.00;
+      nombreGratificacion = 'Gratificación Navidad (Diciembre)';
+    }
+
+    const totalNetoPagar = salarioMensual + montoGratificacion;
+
+    // ==========================================
+    // CONSTRUCCIÓN DEL EXCEL
+    // ==========================================
+    const datosBoleta: any[] = [
       { Concepto: 'EMPRESA', Detalle: 'NÓMINA DE PAGO - BOLETA INDIVIDUAL' },
       { Concepto: '', Detalle: '' },
       { Concepto: 'DATOS DEL TRABAJADOR', Detalle: '-------------------------' },
@@ -63,17 +79,24 @@ export async function GET(
       { Concepto: 'Cargo / Área Asignada', Detalle: emp.AreaNombre },
       { Concepto: 'Tiempo de Servicio Exacto', Detalle: antiguedadExacta },
       { Concepto: '', Detalle: '' },
-      { Concepto: 'REMUNERACIONES', Detalle: '-------------------------' },
-      { Concepto: 'Salario Básico Mensual', Detalle: `S/. ${salarioMensual.toFixed(2)}` },
-      { Concepto: '', Detalle: '' },
-      { Concepto: 'DERECHOS Y BENEFICIOS LEY', Detalle: '-------------------------' },
-      { Concepto: 'Provisión Gratificación Julio', Detalle: `S/. 300.00` },
-      { Concepto: 'Provisión Gratificación Diciembre', Detalle: `S/. 300.00` },
-      { Concepto: '', Detalle: '' },
-      { Concepto: 'TOTAL NETO A PAGAR EN BOLETA', Detalle: `S/. ${salarioMensual.toFixed(2)}` }
+      { Concepto: 'REMUNERACIONES Y BENEFICIOS', Detalle: '-------------------------' },
+      { Concepto: 'Salario Básico Mensual', Detalle: `S/. ${salarioMensual.toFixed(2)}` }
     ];
 
-    // Creación de la hoja de cálculo con Excel binario
+    // Solo se agrega la fila de gratificación si corresponde al mes actual
+    if (montoGratificacion > 0) {
+      datosBoleta.push({ 
+        Concepto: nombreGratificacion, 
+        Detalle: `S/. ${montoGratificacion.toFixed(2)}` 
+      });
+    }
+
+    // Fila final con la suma total real
+    datosBoleta.push(
+      { Concepto: '', Detalle: '' },
+      { Concepto: 'TOTAL NETO A PAGAR EN BOLETA', Detalle: `S/. ${totalNetoPagar.toFixed(2)}` }
+    );
+
     const worksheet = XLSX.utils.json_to_sheet(datosBoleta);
     worksheet['!cols'] = [{ wch: 45 }, { wch: 40 }];
 
@@ -82,7 +105,6 @@ export async function GET(
 
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
 
-    // Retorno del stream para descarga forzada con el código del empleado asignado
     return new NextResponse(excelBuffer, {
       headers: {
         'Content-Disposition': `attachment; filename="Boleta_Pago_${codigo}.xlsx"`,

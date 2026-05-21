@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic'; // Evita problemas de caché estática
 
 export async function GET() {
   try {
-    // Consulta limpia apuntando al nuevo modelo unificado de base de datos
     const [rows] = await pool.query(`
       SELECT 
         e.EmpCodigo, 
@@ -14,6 +13,7 @@ export async function GET() {
         e.EmpApellidoPaterno, 
         a.AreaNombre,
         TIMESTAMPDIFF(YEAR, e.EmpFechaNacimiento, CURDATE()) AS EdadActual,
+        TIMESTAMPDIFF(YEAR, e.EmpFechaIngreso, CURDATE()) AS AntiguedadActual,
         e.EmpFechaIngreso,
         COALESCE(e.EmpSalario, a.AreaSalario) AS Salario
       FROM EMPLEADO e
@@ -22,14 +22,50 @@ export async function GET() {
 
     const empleados = rows as any[];
 
-    // Procesamiento y formateo JSON limpio para la exportación de la hoja
+    let sumaSalarios = 0;
+    let sumaGratisJulio = 0;
+    let sumaGratisDic = 0;
+    let sumaTotalBeneficios = 0;
+
     const datosInforme = empleados.map(emp => {
       const edad = emp.EdadActual;
+      const antiguedad = emp.AntiguedadActual;
+      const salario = Number(emp.Salario);
       const fechaIngreso = new Date(emp.EmpFechaIngreso);
       const hoy = new Date();
-      const antiguedad = hoy.getFullYear() - fechaIngreso.getFullYear();
-      const salario = Number(emp.Salario);
-      const beneficios = 600.00; // S/. 300 Julio + S/. 300 Diciembre (Fijo por normativa)
+      
+      // ==========================================
+      // ALGORITMO DE HISTÓRICO DE GRATIFICACIONES
+      // ==========================================
+      let pagosJulio = 0;
+      let pagosDiciembre = 0;
+      
+      const mesIngreso = fechaIngreso.getMonth() + 1; // 1 a 12
+      const anioIngreso = fechaIngreso.getFullYear();
+      const mesActual = hoy.getMonth() + 1;
+      const anioActual = hoy.getFullYear();
+
+      // Recorremos todos los años desde que entró hasta hoy
+      for (let anio = anioIngreso; anio <= anioActual; anio++) {
+        // ¿Trabajó durante Julio en este año específico?
+        const pasoJulio = (anio > anioIngreso || mesIngreso <= 7) && (anio < anioActual || mesActual >= 7);
+        if (pasoJulio) pagosJulio++;
+
+        // ¿Trabajó durante Diciembre en este año específico?
+        const pasoDiciembre = (anio > anioIngreso || mesIngreso <= 12) && (anio < anioActual || mesActual >= 12);
+        if (pasoDiciembre) pagosDiciembre++;
+      }
+
+      // Multiplicamos las veces que pasó por esas fechas por el monto normativo
+      const totalGratisJulio = pagosJulio * 300.00;
+      const totalGratisDiciembre = pagosDiciembre * 300.00;
+      const totalBeneficiosHistorico = totalGratisJulio + totalGratisDiciembre;
+
+      // Acumuladores globales para la fila final de Totales
+      sumaSalarios += salario;
+      sumaGratisJulio += totalGratisJulio;
+      sumaGratisDic += totalGratisDiciembre;
+      sumaTotalBeneficios += totalBeneficiosHistorico;
 
       return {
         'Código': emp.EmpCodigo,
@@ -38,21 +74,38 @@ export async function GET() {
         'Edad Actual': `${edad} años`,
         'Antigüedad en Empresa': `${antiguedad} años`,
         'Salario Base Mensual': salario.toFixed(2),
-        'Beneficios (Julio + Dic)': beneficios.toFixed(2)
+        'Histórico Gratis (Julio)': totalGratisJulio.toFixed(2),
+        'Histórico Gratis (Diciembre)': totalGratisDiciembre.toFixed(2),
+        'Total Beneficios Acumulados': totalBeneficiosHistorico.toFixed(2)
       };
     });
 
-    // Generación física del libro de Excel binario
+    // AGREGAR FILA DE TOTALES GENERALES
+    datosInforme.push({
+      'Código': 'TOTALES',
+      'Nombres y Apellidos': '',
+      'Cargo': '',
+      'Edad Actual': '',
+      'Antigüedad en Empresa': '',
+      'Salario Base Mensual': sumaSalarios.toFixed(2),
+      'Histórico Gratis (Julio)': sumaGratisJulio.toFixed(2),
+      'Histórico Gratis (Diciembre)': sumaGratisDic.toFixed(2),
+      'Total Beneficios Acumulados': sumaTotalBeneficios.toFixed(2)
+    });
+
     const worksheet = XLSX.utils.json_to_sheet(datosInforme);
     
+    // Configuración estética de anchos de columna adaptada a los nuevos títulos
     worksheet['!cols'] = [
       { wch: 12 }, // Código
-      { wch: 35 }, // Nombres
+      { wch: 35 }, // Nombres y Apellidos
       { wch: 20 }, // Cargo
-      { wch: 15 }, // Edad
+      { wch: 15 }, // Edad Actual
       { wch: 25 }, // Antigüedad
-      { wch: 20 }, // Salario
-      { wch: 25 }  // Beneficios
+      { wch: 22 }, // Salario Base Mensual
+      { wch: 26 }, // Histórico Gratis Julio
+      { wch: 28 }, // Histórico Gratis Diciembre
+      { wch: 30 }  // Total Beneficios Acumulados
     ];
 
     const workbook = XLSX.utils.book_new();
@@ -60,7 +113,6 @@ export async function GET() {
 
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
 
-    // Stream de respuesta hacia el navegador del cliente para forzar descarga
     return new NextResponse(excelBuffer, {
       headers: {
         'Content-Disposition': `attachment; filename="Informe_General_Operaciones.xlsx"`,
