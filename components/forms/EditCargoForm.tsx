@@ -3,6 +3,7 @@
 import React from 'react';
 import toast from 'react-hot-toast';
 import { modificarCargo } from '@/app/actions';
+import { eliminarCargo } from '@/actions/cargos'; // Importamos la acción aquí arriba
 
 interface EditCargoFormProps {
   cargo: {
@@ -13,7 +14,6 @@ interface EditCargoFormProps {
 }
 
 export default function EditCargoForm({ cargo }: EditCargoFormProps) {
-  
   const formId = `edit-form-${cargo.AreaID}`;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -66,24 +66,19 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
 
   return (
     <>
-      {/* El formulario fantasma. Lo declaramos fuera de las celdas para no romper la tabla */}
-      <tr>
-        <td className="hidden">
+      <tr className="hidden">
+        <td>
           <form id={formId} onSubmit={handleSubmit}>
              <input type="hidden" name="areCodigo" value={cargo.AreaID} />
           </form>
         </td>
       </tr>
       
-      {/* La fila visible */}
       <tr className="hover:bg-surface-hover/50 transition-colors group">
-        
-        {/* Celda ID */}
         <td className="px-6 py-4 font-mono text-muted text-xs whitespace-nowrap">
           {String(cargo.AreaID).padStart(2, '0')}
         </td>
         
-        {/* Celda Nombre */}
         <td className="px-6 py-4">
           <input 
             form={formId}
@@ -96,7 +91,6 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
           />
         </td>
         
-        {/* Celda Salario */}
         <td className="px-6 py-4">
           <div className="relative w-full max-w-[200px]">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">S/.</span>
@@ -113,14 +107,30 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
           </div>
         </td>
         
-        {/* Celda Botón */}
-        <td className="px-6 py-4 text-right">
+        <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
           <button 
             form={formId}
             type="submit" 
             className="px-4 py-2 w-[120px] text-sm font-medium text-slate-900 bg-white hover:bg-gray-200 rounded-md transition-colors shadow-sm whitespace-nowrap"
           >
             Actualizar
+          </button>
+          {/* Botón de eliminar corregido para usar la acción importada */}
+          <button
+            onClick={async () => {
+              if(confirm('¿Estás seguro de eliminar este cargo?')) {
+                const result = await eliminarCargo(cargo.AreaID);
+                if (result.success) {
+                  toast.success(result.message);
+                } else {
+                  toast.error(result.message);
+                }
+              }
+            }}
+            type="button"
+            className="px-3 py-2 text-sm font-medium text-red-600 bg-red-100 rounded-md hover:bg-red-200 transition-colors shadow-sm"
+          >
+            Eliminar
           </button>
         </td>
       </tr>
