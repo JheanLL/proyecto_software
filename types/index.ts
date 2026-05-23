@@ -21,7 +21,7 @@ export interface Empleado {
 }
 
 export interface BoletaPago {
-  BoletaID: number;
+  id: number;
   EmpCodigo: string;
   FechaBoleta: string;
   SalarioBase: number;

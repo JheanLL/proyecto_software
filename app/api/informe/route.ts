@@ -14,14 +14,13 @@ export async function GET() {
     WHERE e.activo = 1
   `);
 
-  const [boletas]: any = await pool.query(`
+const [boletas]: any = await pool.query(`
     SELECT b.*, e.EmpNombres, e.EmpApellidoPaterno 
     FROM BOLETA_PAGO b
     JOIN EMPLEADO e ON b.EmpCodigo = e.EmpCodigo
+    WHERE e.activo = 1
     ORDER BY b.FechaBoleta DESC
   `);
-  
-  console.log("Boletas obtenidas:", boletas.length);
 
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Informe");
@@ -78,7 +77,7 @@ export async function GET() {
 
   boletas.forEach((b: any) => {
     worksheetDetalle.addRow([
-      b.BoletaID,
+      b.ID,
       b.EmpCodigo,
       `${b.EmpNombres} ${b.EmpApellidoPaterno}`,
       new Date(b.FechaBoleta).toLocaleDateString(),

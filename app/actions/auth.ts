@@ -22,14 +22,9 @@ export async function loginAction(formData: FormData) {
     
     const user = rows[0];
 
-    if (!user) {
-      return { success: false, message: "Correo o contraseña incorrectos" };
-    }
-
-    // 2. Validar contraseña
-    // Nota: Por ahora comparamos texto plano porque así lo insertamos en el script inicial.
-    // En el futuro, instalaremos bcrypt y usaremos: await bcrypt.compare(password, user.UserPassword)
-    if (password !== user.UserPassword) {
+    // 2. Validar existencia y contraseña en un solo bloque (mejor práctica de seguridad)
+    // Nota: Por ahora comparamos texto plano. A futuro usar: await bcrypt.compare(...)
+    if (!user || password !== user.UserPassword) {
       return { success: false, message: "Correo o contraseña incorrectos" };
     }
 
@@ -43,7 +38,7 @@ export async function loginAction(formData: FormData) {
       .setExpirationTime("8h") // La sesión durará 8 horas
       .sign(SECRET_KEY);
 
-    // 4. Guardar el token en una Cookie de alta seguridad (Next.js 15 exige el await)
+    // 4. Guardar el token en una Cookie de alta seguridad
     const cookieStore = await cookies();
     cookieStore.set("auth_token", token, {
       httpOnly: true,
@@ -53,6 +48,7 @@ export async function loginAction(formData: FormData) {
       path: "/",
     });
 
+    // 5. Retornar éxito para que el cliente haga la redirección
     return { success: true, message: "Login exitoso" };
   } catch (error) {
     console.error("Error en login:", error);

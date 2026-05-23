@@ -18,6 +18,7 @@ export default function LoginPage() {
     const result = await loginAction(formData);
 
     if (result.success) {
+      // Redirección del lado del cliente y recarga de estado
       router.push("/");
       router.refresh(); 
     } else {

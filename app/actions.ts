@@ -246,11 +246,12 @@ export async function generarBoletasMes() {
       };
     }
 
-    // 2. Traer todos los empleados con sus salarios reales calculados
+    // 2. Traer todos los empleados ACTIVOS con sus salarios reales calculados
     const [empleados]: any = await connection.query(`
       SELECT e.EmpCodigo, COALESCE(e.EmpSalario, a.AreaSalario) AS Salario
       FROM EMPLEADO e
       INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
+      WHERE e.activo = 1 /* <-- ¡ESTA ES LA CORRECCIÓN CLAVE! */
     `);
 
     if (empleados.length === 0) {
