@@ -25,6 +25,15 @@ export async function agregarEmpleado(formData: FormData): Promise<ActionResult>
   const idUsuarioActual = 1;
 
   try {
+    // Validar que el área esté activa
+    const [areaRows]: any = await pool.query(
+      "SELECT AreaID FROM AREA_TRABAJO WHERE AreaID = ? AND activo = 1",
+      [area]
+    );
+    if (areaRows.length === 0) {
+      return { success: false, message: "El cargo seleccionado no es válido o no está activo." };
+    }
+
     await pool.query(
       `INSERT INTO EMPLEADO (
         EmpCodigo, AreaID, EmpDNI, EmpApellidoPaterno, EmpApellidoMaterno, 
@@ -49,8 +58,8 @@ export async function agregarEmpleado(formData: FormData): Promise<ActionResult>
     );
 
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorNuevo, UserCodigoHM)
-       VALUES (?, 'Registro de Empleado', 'Nuevo Registro', ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorNuevo, UserCodigoHM, FechaModificacion)
+       VALUES (?, 'Registro de Empleado', 'Nuevo Registro', ?, NOW())`,
       [codigo, idUsuarioActual],
     );
 
@@ -90,8 +99,8 @@ export async function modificarSalario(
     ]);
 
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM)
-       VALUES (?, 'EmpSalario', ?, ?, ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
+       VALUES (?, 'EmpSalario', ?, ?, ?, NOW())`,
       [
         empCodigo,
         String(salarioAnterior),
@@ -105,6 +114,46 @@ export async function modificarSalario(
   } catch (error) {
     console.error("Error al modificar salario:", error);
     return { success: false, message: "Error al modificar el salario" };
+  }
+}
+
+export async function eliminarEmpleado(empCodigo: string): Promise<ActionResult> {
+  const idUsuarioActual = 1;
+  try {
+    await pool.query(`UPDATE EMPLEADO SET activo = 0 WHERE EmpCodigo = ?`, [
+      empCodigo,
+    ]);
+    
+    await pool.query(
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
+       VALUES (?, 'Eliminación Lógica', 'Activo', 'Inactivo', ?, NOW())`,
+      [empCodigo, idUsuarioActual],
+    );
+
+    revalidatePath("/");
+    return { success: true, message: "Empleado eliminado exitosamente" };
+  } catch (error) {
+    console.error("Error al eliminar empleado:", error);
+    return { success: false, message: "Error al eliminar el empleado" };
+  }
+}
+
+export async function asignarBono(
+  empCodigo: string,
+  monto: number,
+  mes: number,
+  anio: number,
+): Promise<ActionResult> {
+  try {
+    await pool.query(
+      `INSERT INTO BONO_PRODUCTIVIDAD (EmpCodigo, Monto, Mes, Anio) VALUES (?, ?, ?, ?)`,
+      [empCodigo, monto, mes, anio],
+    );
+    revalidatePath("/");
+    return { success: true, message: "Bono asignado exitosamente" };
+  } catch (error) {
+    console.error("Error al asignar bono:", error);
+    return { success: false, message: "Error al asignar el bono" };
   }
 }
 

@@ -129,8 +129,8 @@ export async function crearCargo(formData: FormData) {
 
     // SOLUCIÓN: Pasamos EmpCodigo como NULL explícitamente y llenamos ValorAnterior
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM)
-       VALUES (NULL, 'Creación de Área', 'Registro Nuevo', CONCAT(?, ' - S/. ', ?), ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
+       VALUES (NULL, 'Creación de Área', 'Registro Nuevo', CONCAT(?, ' - S/. ', ?), ?, NOW())`,
       [nombre, salario, idUsuarioActual],
     );
 
@@ -171,8 +171,8 @@ export async function modificarCargo(formData: FormData) {
     );
 
     await connection.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM)
-       VALUES (NULL, 'Modificación de Área', ?, CONCAT(?, ' - S/. ', ?), ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
+       VALUES (NULL, 'Modificación de Área', ?, CONCAT(?, ' - S/. ', ?), ?, NOW())`,
       [valorAnterior, nuevoNombre, nuevoSalario, idUsuarioActual],
     );
 

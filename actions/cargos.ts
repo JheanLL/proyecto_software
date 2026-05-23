@@ -16,8 +16,8 @@ export async function crearCargo(formData: FormData): Promise<ActionResult> {
     );
 
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM)
-       VALUES (NULL, 'Creación de Área', 'Registro Nuevo', CONCAT(?, ' - S/. ', ?), ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
+       VALUES (NULL, 'Creación de Área', 'Registro Nuevo', CONCAT(?, ' - S/. ', ?), ?, NOW())`,
       [nombre, salario, idUsuarioActual],
     );
 
@@ -54,8 +54,8 @@ export async function modificarCargo(formData: FormData): Promise<ActionResult> 
     );
 
     await connection.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM)
-       VALUES (NULL, 'Modificación de Área', ?, CONCAT(?, ' - S/. ', ?), ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
+       VALUES (NULL, 'Modificación de Área', ?, CONCAT(?, ' - S/. ', ?), ?, NOW())`,
       [valorAnterior, nuevoNombre, nuevoSalario, idUsuarioActual],
     );
 
@@ -71,7 +71,38 @@ export async function modificarCargo(formData: FormData): Promise<ActionResult> 
       success: false,
       message: "Error al actualizar el cargo. Cambios revertidos.",
     };
-  } finally {
-    connection.release();
+    } finally {
+      connection.release();
+    }
+}
+
+export async function eliminarCargo(areaID: number): Promise<ActionResult> {
+  const idUsuarioActual = 1;
+  try {
+    // Primero verificamos si hay empleados activos usando este cargo
+    const [empleados]: any = await pool.query(
+      "SELECT COUNT(*) as count FROM EMPLEADO WHERE AreaID = ? AND activo = 1",
+      [areaID]
+    );
+
+    if (empleados[0].count > 0) {
+      return { success: false, message: "No se puede eliminar un cargo que tiene empleados activos asignados." };
+    }
+
+    await pool.query(`UPDATE AREA_TRABAJO SET activo = 0 WHERE AreaID = ?`, [
+      areaID,
+    ]);
+
+    await pool.query(
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
+       VALUES (NULL, 'Eliminación Lógica de Área', 'Activo', 'Inactivo', ?, NOW())`,
+      [idUsuarioActual],
+    );
+
+    revalidatePath("/cargos");
+    return { success: true, message: "Cargo eliminado exitosamente" };
+  } catch (error) {
+    console.error("Error al eliminar cargo:", error);
+    return { success: false, message: "Error al eliminar el cargo" };
   }
 }
