@@ -14,7 +14,7 @@ export default async function AuditoriaPage() {
       u.UserNombre
     FROM HISTORIAL_MODIFICACIONES h
     LEFT JOIN USUARIO u ON h.UserCodigoHM = u.UserCodigo
-    ORDER BY h.FechaModificacion DESC
+    ORDER BY h.HistorialID DESC
   `);
   
   const registros = rows as any[];
@@ -120,6 +120,9 @@ export default async function AuditoriaPage() {
                         </span>
                       ) : (
                         <span>{reg.ValorNuevo}</span>
+                      )}
+                      {reg.CampoModificado === "EmpSalario" && reg.ValorNuevo && isNaN(Number(reg.ValorNuevo)) && (
+                        <div className="text-xs text-red-500 mt-1">Formato de valor inválido</div>
                       )}
                     </td>
                   </tr>

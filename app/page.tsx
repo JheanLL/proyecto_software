@@ -2,14 +2,12 @@ import pool from "@/lib/db";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
-import { logoutAction } from "@/app/actions/auth";
-import LogoutButton from "@/components/ui/LogoutButton";
-import Logo from "@/components/ui/Logo";
+import { calcularGratificacion } from "@/actions/boletas";
+import EmpleadosTable from "@/components/ui/EmpleadosTable";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  // 1. Obtener el nombre del usuario logueado desde la Cookie JWT
   let userName = "Usuario";
   try {
     const cookieStore = await cookies();
@@ -26,7 +24,6 @@ export default async function Page() {
     console.error("Error leyendo token en dashboard:", error);
   }
 
-  // 2. Consulta a la base de datos para los empleados
   const [rows] = await pool.query(`
     SELECT 
       e.EmpCodigo, e.EmpNombres, e.EmpApellidoPaterno, a.AreaNombre,
@@ -35,12 +32,13 @@ export default async function Page() {
       COALESCE(e.EmpSalario, a.AreaSalario) AS SalarioFinal
     FROM EMPLEADO e
     INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
+    WHERE e.activo = 1
     ORDER BY CAST(SUBSTRING(e.EmpCodigo, 4) AS UNSIGNED) DESC  
 `);
 
   const empleados = rows as any[];
+  const gratificacion = await calcularGratificacion();
 
-  // RF01: Algoritmo exacto de antigüedad
   const empleadosConCalculos = empleados.map((emp) => {
     const fechaIngreso = new Date(emp.EmpFechaIngreso);
     const hoy = new Date();
@@ -71,7 +69,6 @@ export default async function Page() {
   return (
     <main className="min-h-screen p-8 lg:p-12">
       <div className="max-w-7xl mx-auto">
-        {/* HEADER MODIFICADO CON INFO DE USUARIO */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -83,7 +80,6 @@ export default async function Page() {
           </div>
 
           <div className="flex flex-col items-start lg:items-end gap-4">
-            {/* Botones de Acción Originales */}
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/cargos"
@@ -110,14 +106,8 @@ export default async function Page() {
                 <span aria-hidden="true" className="mr-1.5">
                   📊
                 </span>
-                Informe General
+                Descargar Informe de Operaciones
               </a>
-              <Link
-                href="/boletas"
-                className="px-4 py-2 bg-surface text-foreground border border-border rounded-lg hover:bg-surface-hover transition-colors font-medium text-sm shadow-sm"
-              >
-                💵 Historial Planillas
-              </Link>
               <Link
                 href="/empleados/nuevo"
                 className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors font-medium text-sm shadow-sm"
@@ -131,83 +121,7 @@ export default async function Page() {
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl shadow-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left">
-              <thead className="bg-surface-hover text-muted text-xs uppercase tracking-wider border-b border-border">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">Empleado</th>
-                  <th className="px-6 py-4 font-semibold">Cargo</th>
-                  <th className="px-6 py-4 font-semibold text-center">
-                    Edad / Antigüedad Exacta
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-right">
-                    Salario Mensual
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-right">
-                    Beneficios
-                  </th>
-                  <th className="px-6 py-4 font-semibold text-center">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {empleadosConCalculos.map((emp) => (
-                  <tr
-                    key={emp.EmpCodigo}
-                    className="hover:bg-surface-hover/50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-foreground">
-                        {emp.EmpNombres} {emp.EmpApellidoPaterno}
-                      </div>
-                      <div className="text-muted text-xs mt-0.5 font-mono">
-                        {emp.EmpCodigo}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-brand/10 text-brand">
-                        {emp.AreaNombre}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <div className="text-foreground">
-                        {emp.EdadActual} años
-                      </div>
-                      <div className="text-muted text-xs mt-0.5">
-                        {emp.antiguedadExacta}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right tabular-nums font-medium text-success">
-                      S/. {Number(emp.SalarioFinal).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right tabular-nums text-muted text-xs">
-                      <div>Julio: S/. 300.00</div>
-                      <div>Dic: S/. 300.00</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Link
-                          href={`/empleados/${emp.EmpCodigo}`}
-                          className="px-3 py-1.5 text-xs font-medium text-warning bg-warning/10 rounded-md hover:bg-warning/20 transition-colors"
-                        >
-                          Editar Salario
-                        </Link>
-                        <a
-                          href={`/api/boleta/${emp.EmpCodigo}`}
-                          className="px-3 py-1.5 text-xs font-medium text-success bg-success/10 rounded-md hover:bg-success/20 transition-colors"
-                        >
-                          Boleta
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <EmpleadosTable empleadosConCalculos={empleadosConCalculos} gratificacion={gratificacion} />
       </div>
     </main>
   );

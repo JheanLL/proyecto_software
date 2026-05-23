@@ -13,7 +13,7 @@ export default async function PerfilEmpleadoPage({
   const { codigo } = await params;
 
   // Consulta refactorizada a la nueva estructura relacional
-  const [rows] = await pool.query(`
+    const [rows] = await pool.query(`
     SELECT 
       e.EmpCodigo, 
       e.EmpNombres, 
@@ -25,13 +25,20 @@ export default async function PerfilEmpleadoPage({
     WHERE e.EmpCodigo = ?
   `, [codigo]);
 
+    const [bonos] = await pool.query(`
+    SELECT SUM(Monto) as TotalBonos 
+    FROM BONO_PRODUCTIVIDAD 
+    WHERE EmpCodigo = ?
+  `, [codigo]);
+
   const empleados = rows as any[];
+  const bonosResult = bonos as any[];
   
   if (empleados.length === 0) {
     return redirect('/');
   }
 
-  const emp = empleados[0];
+  const emp = { ...empleados[0], TotalBonos: bonosResult[0]?.TotalBonos || 0 };
 
   const updateAction = async (empCodigo: string, nuevoSalario: number) => {
     'use server';
@@ -77,6 +84,12 @@ export default async function PerfilEmpleadoPage({
               <p className="text-sm font-medium text-muted mb-1">Salario Actual</p>
               <p className="font-medium text-success text-xl tabular-nums">
                 S/. {Number(emp.SalarioActual).toFixed(2)}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted mb-1">Bonos Acumulados</p>
+              <p className="font-medium text-blue-600 text-xl tabular-nums">
+                S/. {Number(emp.TotalBonos).toFixed(2)}
               </p>
             </div>
           </div>

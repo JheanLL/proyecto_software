@@ -4,7 +4,7 @@ import NewCargoForm from '@/components/forms/NewCargoForm';
 import EditCargoForm from '@/components/forms/EditCargoForm';
 
 export default async function CargosPage() {
-  const [rows] = await pool.query('SELECT AreaID, AreaNombre, AreaSalario FROM AREA_TRABAJO');
+  const [rows] = await pool.query('SELECT AreaID, AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE activo = 1');
   const cargos = rows as any[];
 
   return (
@@ -38,7 +38,6 @@ export default async function CargosPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {cargos.map((cargo) => (
-                // Ahora EditCargoForm envuelve toda la fila <tr>, no va dentro de un <td>
                 <EditCargoForm key={cargo.AreaID} cargo={cargo} />
               ))}
             </tbody>

@@ -5,7 +5,7 @@ import NewEmployeeForm from "@/components/forms/NewEmployeeForm";
 export default async function NuevoEmpleadoPage() {
   // Cambiado a la nueva tabla AREA_TRABAJO con sus columnas reales
   const [rows] = await pool.query(
-    "SELECT AreaID, AreaNombre FROM AREA_TRABAJO",
+    "SELECT AreaID, AreaNombre FROM AREA_TRABAJO WHERE activo = 1",
   );
   const areas = rows as any[];
 

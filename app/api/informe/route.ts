@@ -1,127 +1,102 @@
-import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
-import * as XLSX from 'xlsx';
-
-export const dynamic = 'force-dynamic'; // Evita problemas de caché estática
+import { NextResponse } from "next/server";
+import ExcelJS from "exceljs";
+import pool from "@/lib/db";
 
 export async function GET() {
-  try {
-    const [rows] = await pool.query(`
-      SELECT 
-        e.EmpCodigo, 
-        e.EmpNombres, 
-        e.EmpApellidoPaterno, 
-        a.AreaNombre,
-        TIMESTAMPDIFF(YEAR, e.EmpFechaNacimiento, CURDATE()) AS EdadActual,
-        TIMESTAMPDIFF(YEAR, e.EmpFechaIngreso, CURDATE()) AS AntiguedadActual,
-        e.EmpFechaIngreso,
-        COALESCE(e.EmpSalario, a.AreaSalario) AS Salario
-      FROM EMPLEADO e
-      INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
-    `);
+  const [rows]: any = await pool.query(`
+    SELECT 
+      e.EmpCodigo, e.EmpDNI, e.EmpNombres, e.EmpApellidoPaterno, a.AreaNombre,
+      e.EmpFechaNacimiento, e.EmpFechaIngreso,
+      COALESCE(e.EmpSalario, a.AreaSalario) AS SalarioBase,
+      (SELECT COUNT(*) FROM BOLETA_PAGO WHERE EmpCodigo = e.EmpCodigo) AS TotalBoletas
+    FROM EMPLEADO e
+    INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
+    WHERE e.activo = 1
+  `);
 
-    const empleados = rows as any[];
+  const [boletas]: any = await pool.query(`
+    SELECT b.*, e.EmpNombres, e.EmpApellidoPaterno 
+    FROM BOLETA_PAGO b
+    JOIN EMPLEADO e ON b.EmpCodigo = e.EmpCodigo
+    ORDER BY b.FechaBoleta DESC
+  `);
+  
+  console.log("Boletas obtenidas:", boletas.length);
 
-    let sumaSalarios = 0;
-    let sumaGratisJulio = 0;
-    let sumaGratisDic = 0;
-    let sumaTotalBeneficios = 0;
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Informe");
+  const worksheetDetalle = workbook.addWorksheet("Detalle de Boletas");
 
-    const datosInforme = empleados.map(emp => {
-      const edad = emp.EdadActual;
-      const antiguedad = emp.AntiguedadActual;
-      const salario = Number(emp.Salario);
-      const fechaIngreso = new Date(emp.EmpFechaIngreso);
-      const hoy = new Date();
-      
-      // ==========================================
-      // ALGORITMO DE HISTÓRICO DE GRATIFICACIONES
-      // ==========================================
-      let pagosJulio = 0;
-      let pagosDiciembre = 0;
-      
-      const mesIngreso = fechaIngreso.getMonth() + 1; // 1 a 12
-      const anioIngreso = fechaIngreso.getFullYear();
-      const mesActual = hoy.getMonth() + 1;
-      const anioActual = hoy.getFullYear();
+  worksheet.mergeCells("A1:H1");
+  worksheet.getCell("A1").value = "INFORME GENERAL DE OPERACIONES Y RRHH";
+  worksheet.getCell("A1").font = { bold: true, size: 16 };
+  worksheet.getCell("A1").alignment = { horizontal: 'center' };
 
-      // Recorremos todos los años desde que entró hasta hoy
-      for (let anio = anioIngreso; anio <= anioActual; anio++) {
-        // ¿Trabajó durante Julio en este año específico?
-        const pasoJulio = (anio > anioIngreso || mesIngreso <= 7) && (anio < anioActual || mesActual >= 7);
-        if (pasoJulio) pagosJulio++;
+  const headers = ["Código", "DNI", "Nombres y Apellidos", "Área/Cargo", "Edad", "Antigüedad", "Salario Base", "Boletas Generadas"];
+  const headerRow = worksheet.addRow(headers);
+  headerRow.eachCell((cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000080' } };
+    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+    cell.alignment = { horizontal: 'center' };
+  });
+  worksheet.views = [{ state: 'frozen', ySplit: 2 }];
 
-        // ¿Trabajó durante Diciembre en este año específico?
-        const pasoDiciembre = (anio > anioIngreso || mesIngreso <= 12) && (anio < anioActual || mesActual >= 12);
-        if (pasoDiciembre) pagosDiciembre++;
-      }
-
-      // Multiplicamos las veces que pasó por esas fechas por el monto normativo
-      const totalGratisJulio = pagosJulio * 300.00;
-      const totalGratisDiciembre = pagosDiciembre * 300.00;
-      const totalBeneficiosHistorico = totalGratisJulio + totalGratisDiciembre;
-
-      // Acumuladores globales para la fila final de Totales
-      sumaSalarios += salario;
-      sumaGratisJulio += totalGratisJulio;
-      sumaGratisDic += totalGratisDiciembre;
-      sumaTotalBeneficios += totalBeneficiosHistorico;
-
-      return {
-        'Código': emp.EmpCodigo,
-        'Nombres y Apellidos': `${emp.EmpNombres} ${emp.EmpApellidoPaterno}`,
-        'Cargo': emp.AreaNombre,
-        'Edad Actual': `${edad} años`,
-        'Antigüedad en Empresa': `${antiguedad} años`,
-        'Salario Base Mensual': salario.toFixed(2),
-        'Histórico Gratis (Julio)': totalGratisJulio.toFixed(2),
-        'Histórico Gratis (Diciembre)': totalGratisDiciembre.toFixed(2),
-        'Total Beneficios Acumulados': totalBeneficiosHistorico.toFixed(2)
-      };
-    });
-
-    // AGREGAR FILA DE TOTALES GENERALES
-    datosInforme.push({
-      'Código': 'TOTALES',
-      'Nombres y Apellidos': '',
-      'Cargo': '',
-      'Edad Actual': '',
-      'Antigüedad en Empresa': '',
-      'Salario Base Mensual': sumaSalarios.toFixed(2),
-      'Histórico Gratis (Julio)': sumaGratisJulio.toFixed(2),
-      'Histórico Gratis (Diciembre)': sumaGratisDic.toFixed(2),
-      'Total Beneficios Acumulados': sumaTotalBeneficios.toFixed(2)
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(datosInforme);
+  rows.forEach((emp: any, index: number) => {
+    const fechaNac = new Date(emp.EmpFechaNacimiento);
+    const edad = new Date().getFullYear() - fechaNac.getFullYear();
     
-    // Configuración estética de anchos de columna adaptada a los nuevos títulos
-    worksheet['!cols'] = [
-      { wch: 12 }, // Código
-      { wch: 35 }, // Nombres y Apellidos
-      { wch: 20 }, // Cargo
-      { wch: 15 }, // Edad Actual
-      { wch: 25 }, // Antigüedad
-      { wch: 22 }, // Salario Base Mensual
-      { wch: 26 }, // Histórico Gratis Julio
-      { wch: 28 }, // Histórico Gratis Diciembre
-      { wch: 30 }  // Total Beneficios Acumulados
-    ];
+    const fechaIngreso = new Date(emp.EmpFechaIngreso);
+    const hoy = new Date();
+    let anios = hoy.getFullYear() - fechaIngreso.getFullYear();
+    let meses = hoy.getMonth() - fechaIngreso.getMonth();
+    if (meses < 0) { anios--; meses += 12; }
+    
+    const row = worksheet.addRow([
+      emp.EmpCodigo,
+      emp.EmpDNI,
+      `${emp.EmpNombres} ${emp.EmpApellidoPaterno}`,
+      emp.AreaNombre,
+      edad,
+      `${anios} años, ${meses} meses`,
+      emp.SalarioBase,
+      emp.TotalBoletas || 0
+    ]);
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Operaciones RRHH');
+    if (index % 2 === 0) {
+      row.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F0F0' } };
+      });
+    }
+  });
 
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+  const headersDetalle = ["ID Boleta", "Código Empleado", "Nombres", "Fecha", "Salario Base", "Gratificación", "Bono Rendimiento", "Total Pago"];
+  const headerRowDetalle = worksheetDetalle.addRow(headersDetalle);
+  headerRowDetalle.eachCell((cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000080' } };
+    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+  });
 
-    return new NextResponse(excelBuffer, {
-      headers: {
-        'Content-Disposition': `attachment; filename="Informe_General_Operaciones.xlsx"`,
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      },
-    });
+  boletas.forEach((b: any) => {
+    worksheetDetalle.addRow([
+      b.BoletaID,
+      b.EmpCodigo,
+      `${b.EmpNombres} ${b.EmpApellidoPaterno}`,
+      new Date(b.FechaBoleta).toLocaleDateString(),
+      b.SalarioBase,
+      b.Gratificacion,
+      b.BonoRendimiento || 0,
+      b.TotalPago
+    ]);
+  });
 
-  } catch (error) {
-    console.error("Error al generar Excel:", error);
-    return NextResponse.json({ error: 'Error al generar Informe Excel' }, { status: 500 });
-  }
+  worksheet.columns.forEach((col) => col.width = 20);
+  worksheetDetalle.columns.forEach((col) => col.width = 20);
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return new NextResponse(buffer, {
+    headers: {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="Informe_Operaciones_${new Date().toISOString().split('T')[0]}.xlsx"`,
+    },
+  });
 }
