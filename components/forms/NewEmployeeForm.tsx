@@ -181,19 +181,6 @@ export default function NewEmployeeForm({ areas }: NewEmployeeFormProps) {
           </select>
         </div>
 
-        {/* Salario Opcional */}
-        <div className="col-span-2 md:col-span-1">
-          <label htmlFor="salario" className="block text-sm font-medium text-foreground mb-1.5">Salario Personalizado (Opcional)</label>
-          <input
-            type="number"
-            name="salario"
-            id="salario"
-            step="0.01"
-            placeholder="Dejar vacío para usar base de área"
-            className="w-full px-3 py-2 bg-transparent border border-border rounded-lg text-foreground focus:outline-none"
-          />
-        </div>
-
         {/* Fecha de Ingreso */}
         <div className="col-span-2 md:col-span-1">
           <label htmlFor="fechaIngreso" className="block text-sm font-medium text-foreground mb-1.5">Fecha de Ingreso</label>

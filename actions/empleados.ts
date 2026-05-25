@@ -19,9 +19,6 @@ export async function agregarEmpleado(formData: FormData): Promise<ActionResult>
   const contratoInicio = formData.get("contratoInicio") as string;
   const contratoFin = formData.get("contratoFin") as string;
 
-  const salarioInput = formData.get("salario") as string;
-  const salario = salarioInput ? parseFloat(salarioInput) : null;
-
   const idUsuarioActual = 1;
 
   try {
@@ -38,8 +35,8 @@ export async function agregarEmpleado(formData: FormData): Promise<ActionResult>
       `INSERT INTO EMPLEADO (
         EmpCodigo, AreaID, EmpDNI, EmpApellidoPaterno, EmpApellidoMaterno, 
         EmpNombres, EmpGenero, EmpCorreo, EmpFechaNacimiento, 
-        EmpFechaIngreso, EmpContratoInicio, EmpContratoFin, EmpSalario
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        EmpFechaIngreso, EmpContratoInicio, EmpContratoFin
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         codigo,
         area,
@@ -53,7 +50,6 @@ export async function agregarEmpleado(formData: FormData): Promise<ActionResult>
         fechaIngreso,
         contratoInicio,
         contratoFin,
-        salario,
       ],
     );
 
