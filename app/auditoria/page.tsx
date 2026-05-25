@@ -1,6 +1,8 @@
 import pool from "@/lib/db";
 import Link from "next/link";
 
+export const revalidate = 0;
+
 export default async function AuditoriaPage() {
   // Consulta adaptada a HISTORIAL_MODIFICACIONES con JOINs para traer contexto amigable
   const [rows] = await pool.query(`

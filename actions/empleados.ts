@@ -120,11 +120,12 @@ export async function eliminarEmpleado(empCodigo: string): Promise<ActionResult>
       empCodigo,
     ]);
     
-    await pool.query(
+    const [result]: any = await pool.query(
       `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
        VALUES (?, 'Eliminación Lógica', 'Activo', 'Inactivo', ?, NOW())`,
       [empCodigo, idUsuarioActual],
     );
+    console.log("Resultado de inserción en auditoría:", result);
 
     revalidatePath("/");
     return { success: true, message: "Empleado eliminado exitosamente" };
