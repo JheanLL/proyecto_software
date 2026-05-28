@@ -13,7 +13,7 @@ export async function GET(
 
   // Traemos también la fecha de ingreso del empleado
   const [rows]: any = await pool.query(
-    `SELECT e.EmpNombres, e.EmpApellidoPaterno, e.EmpDNI, e.EmpFechaIngreso, a.AreaNombre 
+    `SELECT e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, e.EmpDNI, e.EmpFechaIngreso, a.AreaNombre 
      FROM EMPLEADO e 
      LEFT JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID 
      WHERE e.EmpCodigo = ?`,
@@ -39,7 +39,7 @@ export async function GET(
 
   worksheet.getCell("A2").value = `Fecha: ${new Date().toLocaleDateString()}`;
   
-  worksheet.addRow(["Nombres:", `${emp.EmpNombres} ${emp.EmpApellidoPaterno}`]);
+  worksheet.addRow(["Nombres:", `${emp.EmpNombres} ${emp.EmpApellidoPaterno} ${emp.EmpApellidoMaterno}`]);
   worksheet.addRow(["DNI:", emp.EmpDNI]);
   worksheet.addRow(["Cargo/Área:", emp.AreaNombre]);
   worksheet.addRow([]);
@@ -53,7 +53,7 @@ export async function GET(
   const totalRow = worksheet.addRow(["Neto a Pagar", total]);
   totalRow.font = { bold: true };
 
-  worksheet.columns = [{ width: 30 }, { width: 20 }];
+  worksheet.columns = [{ width: 45 }, { width: 20 }];
   worksheet.eachRow((row) => {
     row.eachCell((cell) => {
       cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
