@@ -1,69 +1,186 @@
 @import "tailwindcss";
 
 :root {
-  /* Paleta Base (Light Mode) */
-  --bg-base: #f8fafc; /* Fondo general de la app */
-  --bg-surface: #ffffff; /* Fondo de tarjetas y tablas */
-  --bg-surface-hover: #f1f5f9;
-  
-  --text-main: #0f172a; /* Texto principal oscuro */
-  --text-muted: #475569; /* Texto secundario/etiquetas (Mejorado para contraste WCAG AA) */
-  
-  --border-subtle: #e2e8f0; /* Bordes delicados */
-  
-  /* Colores de Marca y Estado (Ajustados para contraste >= 4.5:1 en Light Mode) */
-  --color-brand: #2563eb;
-  --color-brand-hover: #1d4ed8;
-  --color-success: #047857; /* Cambiado de #10b981 a #047857 para cumplir WCAG AA */
-  --color-warning: #b45309; /* Cambiado de #f59e0b a #b45309 para cumplir WCAG AA */
+  /* ========== PALETA MODERNA ========== */
+  /* Light Mode - Inspirada en Linear/Stripe con tonos slate e indigo */
+  --bg-base: #f7f8fa;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f3f6;
+
+  --text-main: #101828;
+  --text-muted: #4b5565;
+
+  --border-subtle: #e4e7ec;
+  --border-strong: #d0d5dd;
+
+  /* Marca - Indigo moderno */
+  --color-brand: #4f46e5;
+  --color-brand-hover: #4338ca;
+  --color-brand-light: #eef2ff;
+  --color-brand-soft: #e0e7ff;
+
+  /* Estados */
+  --color-success: #059669;
+  --color-success-light: #ecfdf5;
+  --color-warning: #d97706;
+  --color-warning-light: #fffbeb;
+  --color-danger: #dc2626;
+  --color-danger-light: #fef2f2;
+  --color-info: #2563eb;
+  --color-info-light: #eff6ff;
+
+  /* Sombras */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.06);
+
+  /* Radio de borde */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Paleta Base (Dark Mode) */
-    --bg-base: #020617;
-    --bg-surface: #0f172a;
-    --bg-surface-hover: #1e293b;
-    
-    --text-main: #f8fafc;
+    --bg-base: #0a0a0f;
+    --bg-surface: #12121a;
+    --bg-surface-hover: #1a1a24;
+
+    --text-main: #f1f5f9;
     --text-muted: #94a3b8;
-    
-    --border-subtle: #334155;
-    
-    --color-brand: #3b82f6;
-    --color-brand-hover: #60a5fa;
+
+    --border-subtle: #1e293b;
+    --border-strong: #334155;
+
+    --color-brand: #6366f1;
+    --color-brand-hover: #818cf8;
+    --color-brand-light: #1e1b4b;
+    --color-brand-soft: #312e81;
+
+    --color-success: #10b981;
+    --color-success-light: #022c22;
+    --color-warning: #f59e0b;
+    --color-warning-light: #422006;
+    --color-danger: #ef4444;
+    --color-danger-light: #450a0a;
+    --color-info: #3b82f6;
+    --color-info-light: #172554;
   }
 }
 
 @theme inline {
-  /* Inyectamos nuestras variables a las clases de Tailwind */
   --color-background: var(--bg-base);
   --color-foreground: var(--text-main);
-  
+
   --color-surface: var(--bg-surface);
   --color-surface-hover: var(--bg-surface-hover);
   --color-muted: var(--text-muted);
   --color-border: var(--border-subtle);
-  
+  --color-border-strong: var(--border-strong);
+
   --color-brand: var(--color-brand);
   --color-brand-hover: var(--color-brand-hover);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
+  --color-brand-light: var(--color-brand-light);
+  --color-brand-soft: var(--color-brand-soft);
 
-  /* Sombras más modernas y suaves tipo Stripe */
-  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --color-success: var(--color-success);
+  --color-success-light: var(--color-success-light);
+  --color-warning: var(--color-warning);
+  --color-warning-light: var(--color-warning-light);
+  --color-danger: var(--color-danger);
+  --color-danger-light: var(--color-danger-light);
+  --color-info: var(--color-info);
+  --color-info-light: var(--color-info-light);
+
+  --shadow-card: var(--shadow-md);
+  --shadow-input: 0 0 0 3px rgb(79 70 229 / 0.15);
+  --shadow-button: var(--shadow-xs);
 }
 
+/* ========== ESTILOS BASE ========== */
 body {
   background-color: var(--bg-base);
   color: var(--text-main);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased; /* Suaviza el texto para que se vea más limpio */
+  font-family: "Geist", "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
 }
 
-/* Mejora global de accesibilidad: Indicadores de enfoque de alto contraste (WCAG 2.4.7) */
+/* Scrollbar moderna */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Indicadores de enfoque accesibles */
 *:focus-visible {
   outline: 2px solid var(--color-brand) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 2px var(--bg-surface) !important;
+  border-radius: 2px !important;
+}
+
+/* Transiciones suaves globales */
+a,
+button {
+  transition: all 0.15s ease;
+}
+
+/* Tablas - números tabulares */
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animaciones de entrada sutiles */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease;
+}
+
+/* Gradientes decorativos */
+.gradient-brand {
+  background: linear-gradient(135deg, var(--color-brand), #7c3aed);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, var(--color-danger), #b91c1c);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-brand), #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
