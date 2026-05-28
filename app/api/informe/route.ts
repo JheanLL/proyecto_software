@@ -68,7 +68,7 @@ const [boletas]: any = await pool.query(`
     }
   });
 
-  const headersDetalle = ["ID Boleta", "Código Empleado", "Nombres", "Fecha", "Salario Base", "Gratificación", "Bono Rendimiento", "Total Pago"];
+  const headersDetalle = ["ID Boleta", "Código Empleado", "Nombres", "Fecha", "Salario Base", "Gratificación", "Total Pago"];
   const headerRowDetalle = worksheetDetalle.addRow(headersDetalle);
   headerRowDetalle.eachCell((cell) => {
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000080' } };
@@ -83,7 +83,6 @@ const [boletas]: any = await pool.query(`
       new Date(b.FechaBoleta).toLocaleDateString(),
       b.SalarioBase,
       b.Gratificacion,
-      b.BonoRendimiento || 0,
       b.TotalPago
     ]);
   });

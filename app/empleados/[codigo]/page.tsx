@@ -1,109 +1,149 @@
-import pool from '@/lib/db';
-import Link from 'next/link';
-import FormSalario from '@/components/forms/FormSalario';
-import { modificarSalario } from '@/actions/empleados';
-import { redirect } from 'next/navigation';
+import pool from "@/lib/db";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import EditEmployeeForm from "@/components/forms/EditEmployeeForm";
 
-export default async function PerfilEmpleadoPage({ 
-  params 
-}: { 
-  params: Promise<{ codigo: string }> 
+export const revalidate = 0;
+
+export default async function PerfilEmpleadoPage({
+  params,
+}: {
+  params: Promise<{ codigo: string }>;
 }) {
-  // Await obligatorio para params en Next.js 15
   const { codigo } = await params;
 
-  // Consulta refactorizada a la nueva estructura relacional
-    const [rows] = await pool.query(`
-    SELECT 
-      e.EmpCodigo, 
-      e.EmpNombres, 
-      e.EmpApellidoPaterno, 
-      a.AreaNombre,
-      COALESCE(e.EmpSalario, a.AreaSalario) AS SalarioActual
-    FROM EMPLEADO e
-    INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
-    WHERE e.EmpCodigo = ?
-  `, [codigo]);
+  // 1. Obtener la información base del empleado
+  const [empRows] = await pool.query(
+    "SELECT * FROM EMPLEADO WHERE EmpCodigo = ? AND activo = 1",
+    [codigo],
+  );
+  const empleados = empRows as any[];
+  if (empleados.length === 0) return redirect("/");
+  const empleado = empleados[0];
 
-    const [bonos] = await pool.query(`
-    SELECT SUM(Monto) as TotalBonos 
-    FROM BONO_PRODUCTIVIDAD 
-    WHERE EmpCodigo = ?
-  `, [codigo]);
+  // 2. Obtener cargos para el selector
+  const [areaRows] = await pool.query(
+    "SELECT AreaID, AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE activo = 1",
+  );
+  const areas = areaRows as any[];
 
-  const empleados = rows as any[];
-  const bonosResult = bonos as any[];
-  
-  if (empleados.length === 0) {
-    return redirect('/');
-  }
-
-  const emp = { ...empleados[0], TotalBonos: bonosResult[0]?.TotalBonos || 0 };
-
-  const updateAction = async (empCodigo: string, nuevoSalario: number) => {
-    'use server';
-    return await modificarSalario(empCodigo, nuevoSalario);
-  };
+  // 3. Obtener el historial exclusivo de salarios y cargos de este empleado
+  const [historialRows] = await pool.query(
+    `SELECT h.*, u.UserNombre 
+   FROM HISTORIAL_MODIFICACIONES h
+   LEFT JOIN USUARIO u ON h.UserCodigoHM = u.UserCodigo
+   WHERE h.EmpCodigo = ? AND h.CampoModificado IN ('Ajuste Salarial', 'Cambio de Cargo / Área')
+   ORDER BY h.FechaModificacion DESC, h.HistorialID DESC`,
+    [codigo],
+  );
+  const historial = historialRows as any[];
 
   return (
-    <main className="min-h-screen p-8 lg:p-12 max-w-3xl mx-auto">
-      
-      {/* Header */}
-      <div className="mb-8">
-        <Link 
-          href="/" 
-          className="inline-flex items-center text-sm font-medium text-muted hover:text-foreground transition-colors mb-4"
+    <main className="min-h-screen p-4 sm:p-8 lg:p-12 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-8 border-b border-border pb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            Expediente de Empleado
+          </h1>
+          <p className="text-muted text-sm mt-0.5">
+            Edición general e histórico de movimientos.
+          </p>
+        </div>
+        <Link
+          href="/"
+          className="px-3 py-1.5 text-xs bg-surface border border-border text-foreground rounded-md hover:bg-surface-hover transition-colors"
         >
-          <span aria-hidden="true">&larr;</span> Volver a la lista
+          &larr; Volver
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Perfil del Empleado
-        </h1>
-        <p className="text-muted mt-1">
-          {emp.EmpNombres} {emp.EmpApellidoPaterno}
-        </p>
       </div>
 
-      {/* Tarjeta Principal */}
-      <div className="bg-surface border border-border rounded-xl shadow-card overflow-hidden">
-        
-        {/* Sección de Datos */}
-        <div className="p-6 md:p-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <p className="text-sm font-medium text-muted mb-1">Código</p>
-              <p className="font-mono text-foreground">{emp.EmpCodigo}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted mb-1">Cargo Actual</p>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-brand/10 text-brand">
-                {emp.AreaNombre}
-              </span>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted mb-1">Salario Actual</p>
-              <p className="font-medium text-success text-xl tabular-nums">
-                S/. {Number(emp.SalarioActual).toFixed(2)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted mb-1">Bonos Acumulados</p>
-              <p className="font-medium text-blue-600 text-xl tabular-nums">
-                S/. {Number(emp.TotalBonos).toFixed(2)}
-              </p>
-            </div>
+      {/* Grid del Layout de Pantalla 50 / 50 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Panel Izquierdo: Formulario */}
+        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
+          <h2 className="text-base font-semibold text-foreground mb-4">
+            Información del Personal
+          </h2>
+          <EditEmployeeForm empleado={empleado} areas={areas} />
+        </div>
+
+        {/* Panel Derecho: Historial */}
+        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm min-h-[500px]">
+          <h2 className="text-base font-semibold text-foreground mb-4">
+            Historial de Cargos y Salarios
+          </h2>
+          <div className="flow-root">
+            <ul className="-mb-8">
+              {historial.map((log, logIdx) => {
+                const fechaStr = new Date(log.FechaModificacion).toLocaleString(
+                  "es-PE",
+                  {
+                    timeZone: "America/Lima",
+                  },
+                );
+                const isSalario =
+                  log.CampoModificado.toLowerCase().includes("salario");
+
+                return (
+                  <li key={log.HistorialID}>
+                    <div className="relative pb-8">
+                      {logIdx !== historial.length - 1 ? (
+                        <span
+                          className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-border"
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      <div className="relative flex space-x-3">
+                        <div>
+                          <span
+                            className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-surface ${
+                              isSalario
+                                ? "bg-blue-500/10 text-blue-500"
+                                : "bg-purple-500/10 text-purple-500"
+                            }`}
+                          >
+                            {isSalario ? "💰" : "💼"}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0 pt-1.5">
+                          <p className="text-sm font-medium text-foreground">
+                            {log.CampoModificado}
+                          </p>
+                          <div className="text-xs text-muted mt-1 space-y-0.5">
+                            <p>
+                              De:{" "}
+                              <span className="font-mono bg-border/40 px-1 rounded">
+                                {log.ValorAnterior || "Monto Base"}
+                              </span>{" "}
+                              &rarr; A:{" "}
+                              <span className="font-mono bg-border/40 px-1 rounded text-foreground font-semibold">
+                                {log.ValorNuevo}
+                              </span>
+                            </p>
+                            <p className="text-[11px] text-muted/70 flex items-center gap-2 pt-0.5">
+                              <span>📅 {fechaStr}</span>
+                              <span>•</span>
+                              <span>👤 {log.UserNombre || "Sistema"}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+
+              {historial.length === 0 && (
+                <div className="text-center py-12 text-muted text-sm">
+                  <p>
+                    No se han registrado modificaciones de sueldo o cargo para
+                    este empleado.
+                  </p>
+                </div>
+              )}
+            </ul>
           </div>
         </div>
-
-        {/* Sección de Acción (Formulario) */}
-        <div className="bg-surface-hover border-t border-border p-6 md:p-8">
-          <FormSalario 
-            empCodigo={emp.EmpCodigo} 
-            salarioActual={Number(emp.SalarioActual)} 
-            modificarSalarioAction={updateAction} 
-          />
-        </div>
-
       </div>
     </main>
   );

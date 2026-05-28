@@ -8,26 +8,28 @@ export async function GET(
 ) {
   const { codigo } = await params;
   const searchParams = request.nextUrl.searchParams;
-  const total = parseFloat(searchParams.get("total") || "0");
-  const gratificacion = parseFloat(searchParams.get("gratificacion") || "0");
-  const bono = parseFloat(searchParams.get("bono") || "0");
+  const totalParam = parseFloat(searchParams.get("total") || "0");
+  const gratificacionParam = parseFloat(searchParams.get("gratificacion") || "0");
 
+  // Traemos también la fecha de ingreso del empleado
   const [rows]: any = await pool.query(
-    `SELECT e.EmpNombres, e.EmpApellidoPaterno, e.EmpDNI, a.AreaNombre 
+    `SELECT e.EmpNombres, e.EmpApellidoPaterno, e.EmpDNI, e.EmpFechaIngreso, a.AreaNombre 
      FROM EMPLEADO e 
      LEFT JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID 
      WHERE e.EmpCodigo = ?`,
     [codigo]
   );
-  console.log("Query result for", codigo, ":", JSON.stringify(rows));
 
   const emp = rows[0];
   if (!emp) return NextResponse.json({ error: "Empleado no encontrado" }, { status: 404 });
 
+  // Usamos los montos que vienen por parámetro desde el cliente (calculados en el Modal)
+  const gratificacion = gratificacionParam;
+  const total = totalParam;
+
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Boleta");
 
-  // Estilos
   const titleStyle = { font: { bold: true, size: 16 } };
   const headerStyle = { font: { bold: true }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } }, border: { bottom: { style: 'thin' } } };
 
@@ -45,9 +47,8 @@ export async function GET(
   const tableHeader = worksheet.addRow(["Concepto", "Monto (S/.)"]);
   tableHeader.eachCell((cell) => cell.style = headerStyle as any);
 
-  worksheet.addRow(["Salario Base", total - gratificacion - bono]);
+  worksheet.addRow(["Salario Base", total - gratificacion]);
   if (gratificacion > 0) worksheet.addRow(["Gratificación", gratificacion]);
-  if (bono > 0) worksheet.addRow(["Bono de Productividad", bono]);
   
   const totalRow = worksheet.addRow(["Neto a Pagar", total]);
   totalRow.font = { bold: true };
