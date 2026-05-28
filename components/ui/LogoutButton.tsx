@@ -1,21 +1,22 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 
 export default function LogoutButton() {
   const handleLogout = async () => {
-    // 1. Borramos la cookie en el servidor
     await logoutAction();
-    // 2. Forzamos la redirección nativa del navegador para limpiar cualquier caché
-    window.location.href = "/login"; 
+    window.location.href = "/login";
   };
 
   return (
-    <button 
+    <button
       onClick={handleLogout}
-      className="text-sm font-medium text-muted hover:text-red-500 transition-colors"
+      className="flex items-center gap-1.5 text-sm font-medium text-muted hover:text-danger transition-colors px-2 py-1.5 rounded-lg hover:bg-danger-light"
+      title="Cerrar sesión"
     >
-      Cerrar Sesión
+      <LogOut className="w-4 h-4" />
+      <span className="hidden sm:inline">Salir</span>
     </button>
   );
 }
