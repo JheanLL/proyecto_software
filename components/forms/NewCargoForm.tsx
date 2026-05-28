@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import toast from 'react-hot-toast';
-import { crearCargo } from '@/app/actions';
+import { crearCargo } from '@/actions/cargos';
 
 export default function NewCargoForm() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -12,6 +12,19 @@ export default function NewCargoForm() {
     
     // Capturamos el FormData de forma síncrona desde el target actual del formulario
     const currentFormData = new FormData(e.currentTarget);
+    const nombre = currentFormData.get("nombre") as string;
+    const salario = parseFloat(currentFormData.get("salario") as string);
+
+    // Validaciones
+    if (nombre.length < 3) {
+      toast.error("El nombre del cargo debe tener al menos 3 caracteres.");
+      return;
+    }
+    if (isNaN(salario) || salario <= 0) {
+      toast.error("El salario debe ser un número positivo.");
+      return;
+    }
+
     const loadingToast = toast.loading('Creando cargo...');
     
     try {

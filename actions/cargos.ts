@@ -9,16 +9,14 @@ export async function crearCargo(formData: FormData): Promise<ActionResult> {
   const salario = Number(formData.get("salario"));
   const idUsuarioActual = 1;
 
-  try {
-    await pool.query(
-      "INSERT INTO AREA_TRABAJO (AreaNombre, AreaSalario) VALUES (?, ?)",
-      [nombre, salario],
-    );
+  if (!nombre || nombre.length < 3) return { success: false, message: "Nombre inválido." };
+  if (isNaN(salario) || salario <= 0) return { success: false, message: "Salario inválido." };
 
+  try {
+    await pool.query("INSERT INTO AREA_TRABAJO (AreaNombre, AreaSalario) VALUES (?, ?)", [nombre, salario]);
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
-       VALUES (NULL, 'Creación de Área', 'Registro Nuevo', CONCAT(?, ' - S/. ', ?), ?, NOW())`,
-      [nombre, salario, idUsuarioActual],
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion) VALUES (NULL, 'Creación de Área', 'Registro Nuevo', CONCAT(?, ' - S/. ', ?), ?, NOW())`,
+      [nombre, salario, idUsuarioActual]
     );
 
     revalidatePath("/cargos");
@@ -35,68 +33,45 @@ export async function modificarCargo(formData: FormData): Promise<ActionResult> 
   const nuevoSalario = Number(formData.get("salario"));
   const idUsuarioActual = 1;
 
-  const connection = await pool.getConnection();
+  if (!nuevoNombre || nuevoNombre.length < 3) return { success: false, message: "Nombre inválido." };
+  if (isNaN(nuevoSalario) || nuevoSalario <= 0) return { success: false, message: "Salario inválido." };
 
+  const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    const [old]: any = await connection.query(
-      "SELECT AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ?",
-      [areaID],
-    );
-    const valorAnterior = old[0]
-      ? `${old[0].AreaNombre} - S/. ${old[0].AreaSalario}`
-      : "Desconocido";
+    const [old]: any = await connection.query("SELECT AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ?", [areaID]);
+    const valorAnterior = old[0] ? `${old[0].AreaNombre} - S/. ${old[0].AreaSalario}` : "Desconocido";
 
+    await connection.query(`UPDATE AREA_TRABAJO SET AreaNombre = ?, AreaSalario = ? WHERE AreaID = ?`, [nuevoNombre, nuevoSalario, areaID]);
     await connection.query(
-      `UPDATE AREA_TRABAJO SET AreaNombre = ?, AreaSalario = ? WHERE AreaID = ?`,
-      [nuevoNombre, nuevoSalario, areaID],
-    );
-
-    await connection.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
-       VALUES (NULL, 'Modificación de Área', ?, CONCAT(?, ' - S/. ', ?), ?, NOW())`,
-      [valorAnterior, nuevoNombre, nuevoSalario, idUsuarioActual],
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion) VALUES (NULL, 'Modificación de Área', ?, CONCAT(?, ' - S/. ', ?), ?, NOW())`,
+      [valorAnterior, nuevoNombre, nuevoSalario, idUsuarioActual]
     );
 
     await connection.commit();
-
     revalidatePath("/cargos");
     revalidatePath("/");
     return { success: true, message: "Cargo actualizado exitosamente" };
   } catch (error) {
     await connection.rollback();
     console.error("Error transaccional en modificarCargo:", error);
-    return {
-      success: false,
-      message: "Error al actualizar el cargo. Cambios revertidos.",
-    };
-    } finally {
-      connection.release();
-    }
+    return { success: false, message: "Error al actualizar el cargo. Cambios revertidos." };
+  } finally {
+    connection.release();
+  }
 }
 
 export async function eliminarCargo(areaID: number): Promise<ActionResult> {
   const idUsuarioActual = 1;
   try {
-    // Primero verificamos si hay empleados activos usando este cargo
-    const [empleados]: any = await pool.query(
-      "SELECT COUNT(*) as count FROM EMPLEADO WHERE AreaID = ? AND activo = 1",
-      [areaID]
-    );
+    const [empleados]: any = await pool.query("SELECT COUNT(*) as count FROM EMPLEADO WHERE AreaID = ? AND activo = 1", [areaID]);
+    if (empleados[0].count > 0) return { success: false, message: "No se puede eliminar un cargo que tiene empleados activos asignados." };
 
-    if (empleados[0].count > 0) {
-      return { success: false, message: "No se puede eliminar un cargo que tiene empleados activos asignados." };
-    }
-
-    await pool.query(`UPDATE AREA_TRABAJO SET activo = 0 WHERE AreaID = ?`, [
-      areaID,
-    ]);
-
+    await pool.query(`UPDATE AREA_TRABAJO SET activo = 0 WHERE AreaID = ?`, [areaID]);
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
-       VALUES (NULL, 'Eliminación Lógica de Área', 'Activo', 'Inactivo', ?, NOW())`,
-      [idUsuarioActual],
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion) VALUES (NULL, 'Eliminación Lógica de Área', 'Activo', 'Inactivo', ?, NOW())`,
+      [idUsuarioActual]
     );
 
     revalidatePath("/cargos");

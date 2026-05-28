@@ -37,9 +37,10 @@ export default async function Page() {
 `);
 
   const empleados = rows as any[];
-  const gratificacion = await calcularGratificacion();
+  // const gratificacion = await calcularGratificacion(); // Esto fallaba porque requiere empCodigo
 
-  const empleadosConCalculos = empleados.map((emp) => {
+  const empleadosConCalculos = await Promise.all(empleados.map(async (emp) => {
+    const gratificacion = await calcularGratificacion(emp.EmpCodigo);
     const fechaIngreso = new Date(emp.EmpFechaIngreso);
     const hoy = new Date();
 
@@ -63,8 +64,8 @@ export default async function Page() {
     }
 
     const antiguedadExacta = `${anios} años, ${meses} meses, ${dias} días`;
-    return { ...emp, antiguedadExacta };
-  });
+    return { ...emp, antiguedadExacta, gratificacion };
+  }));
 
   return (
     <main className="min-h-screen p-8 lg:p-12">
@@ -121,7 +122,7 @@ export default async function Page() {
           </div>
         </div>
 
-        <EmpleadosTable empleadosConCalculos={empleadosConCalculos} gratificacion={gratificacion} />
+        <EmpleadosTable empleadosConCalculos={empleadosConCalculos} />
       </div>
     </main>
   );

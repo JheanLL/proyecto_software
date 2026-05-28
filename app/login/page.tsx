@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginAction } from "@/app/actions/auth"; 
+import { loginAction } from "@/actions/auth"; 
 
 export default function LoginPage() {
   const [error, setError] = useState("");
@@ -11,10 +11,24 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
     const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    // Validación cliente básica
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Por favor, ingresa un correo electrónico válido.");
+      return;
+    }
+    if (!password || password.trim() === "") {
+      setError("La contraseña no puede estar vacía.");
+      return;
+    }
+
+    setLoading(true);
     const result = await loginAction(formData);
 
     if (result.success) {
