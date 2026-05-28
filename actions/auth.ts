@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 
 // Clave secreta para firmar los tokens (En producción esto va en tu archivo .env)
 const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || "mi_clave_secreta_super_segura_para_desarrollo"
+  process.env.JWT_SECRET
 );
 
 export async function loginAction(formData: FormData) {
