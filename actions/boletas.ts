@@ -31,10 +31,9 @@ export async function generarBoletasMes(): Promise<ActionResult> {
     for (const emp of empleados) {
       const salarioBase = Number(emp.Salario);
       const totalPago = salarioBase + gratificacion;
-      const boletaId = `BOL-${emp.EmpCodigo}-${yyyy}${mm}`;
       await connection.query(
-        `INSERT INTO BOLETA_PAGO (BoletaID, EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, ?, ?, ?, ?, ?)`, 
-        [boletaId, emp.EmpCodigo, fechaBoleta, salarioBase, gratificacion, totalPago]
+        `INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, ?, ?, ?, ?)`, 
+        [emp.EmpCodigo, fechaBoleta, salarioBase, gratificacion, totalPago]
       );
     }
     
@@ -52,7 +51,6 @@ export async function generarBoletasMes(): Promise<ActionResult> {
 
 export async function registrarBoleta(empCodigo: string, salarioBase: number, gratificacion: number, totalPago: number): Promise<ActionResult> {
   try {
-    const boletaId = `BOL-${empCodigo}-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}`;
     const [existing]: any = await pool.query(
       `SELECT BoletaID FROM BOLETA_PAGO WHERE EmpCodigo = ? AND MONTH(BoletaFechaBoleta) = MONTH(CURDATE()) AND YEAR(BoletaFechaBoleta) = YEAR(CURDATE())`,
       [empCodigo]
@@ -61,7 +59,7 @@ export async function registrarBoleta(empCodigo: string, salarioBase: number, gr
     if (existing.length > 0) {
       await pool.query(`UPDATE BOLETA_PAGO SET BoletaSalarioBase = ?, BoletaGratificacion = ?, BoletaTotalPago = ? WHERE BoletaID = ?`, [salarioBase, gratificacion, totalPago, existing[0].BoletaID]);
     } else {
-      await pool.query(`INSERT INTO BOLETA_PAGO (BoletaID, EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, ?, CURDATE(), ?, ?, ?)`, [boletaId, empCodigo, salarioBase, gratificacion, totalPago]);
+      await pool.query(`INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, CURDATE(), ?, ?, ?)`, [empCodigo, salarioBase, gratificacion, totalPago]);
     }
     
     revalidatePath("/");

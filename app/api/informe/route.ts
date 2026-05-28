@@ -115,7 +115,7 @@ export async function GET() {
 
   boletas.forEach((b: any) => {
     worksheetDetalle.addRow([
-      b.BoletaID,
+      `#${String(b.BoletaID).padStart(3, '0')}`,
       b.EmpCodigo,
       `${b.EmpNombres} ${b.EmpApellidoPaterno} ${b.EmpApellidoMaterno}`,
       new Date(b.BoletaFechaBoleta).toLocaleDateString("es-PE", { timeZone: "UTC" }),

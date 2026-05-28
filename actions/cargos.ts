@@ -39,7 +39,7 @@ export async function crearCargo(formData: FormData): Promise<ActionResult> {
     await connection.query("INSERT INTO AREA_TRABAJO (AreaNombre, AreaSalario) VALUES (?, ?)", [nombre, salario]);
     const FechaModificacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
     await connection.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES ('', 'Creación de Área', 'Registro Nuevo', CONCAT(?, ' - S/. ', ?), ?, ?)`,
+       `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (NULL, 'Creación de Área', 'Registro Nuevo', CONCAT(?, ' - S/. ', ?), ?, ?)`,
       [nombre, salario, FechaModificacion, idUsuarioActual]
     );
 
@@ -81,7 +81,7 @@ export async function modificarCargo(formData: FormData): Promise<ActionResult> 
 
     const FechaModificacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
     await connection.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES ('', 'Modificación de Área', ?, CONCAT(?, ' - S/. ', ?), ?, ?)`,
+       `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (NULL, 'Modificación de Área', ?, CONCAT(?, ' - S/. ', ?), ?, ?)`,
       [valorAnterior, nuevoNombre, nuevoSalario, FechaModificacion, idUsuarioActual]
     );
 
@@ -114,7 +114,7 @@ export async function eliminarCargo(areaID: number): Promise<ActionResult> {
 
     const FechaModificacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES ('', 'Eliminación Lógica de Área', 'Activo', 'Inactivo', ?, ?)`,
+       `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (NULL, 'Eliminación Lógica de Área', 'Activo', 'Inactivo', ?, ?)`,
       [FechaModificacion, idUsuarioActual]
     );
 

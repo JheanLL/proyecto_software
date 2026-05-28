@@ -23,7 +23,7 @@ export interface Empleado {
 }
 
 export interface BoletaPago {
-  BoletaID: string;
+  BoletaID: number;
   EmpCodigo: string;
   BoletaFechaBoleta: string;
   BoletaSalarioBase: number;
@@ -39,6 +39,19 @@ export interface HistorialModificacion {
   HMValorNuevo: string;
   HMFechaModificacion: string;
   HMUserCodigo: number;
+}
+
+export interface Rol {
+  RolID: number;
+  RolNombre: string;
+}
+
+export interface Usuario {
+  UserCodigo: number;
+  UserNombre: string;
+  UserCorreo: string;
+  UserPassword: string;
+  RolID: number;
 }
 
 export interface ActionResult {
