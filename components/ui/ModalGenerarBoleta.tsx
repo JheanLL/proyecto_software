@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { registrarBoleta } from "@/actions/boletas";
+import {
+  X,
+  User,
+  DollarSign,
+  Gift,
+  FileText,
+  Loader2,
+  ReceiptText,
+} from "lucide-react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -10,6 +19,7 @@ interface ModalProps {
     EmpCodigo: string;
     EmpNombres: string;
     EmpApellidoPaterno: string;
+    EmpApellidoMaterno: string;
     SalarioFinal: number;
     EmpFechaIngreso: string | Date;
   };
@@ -22,29 +32,26 @@ export default function ModalGenerarBoleta({
 }: ModalProps) {
   const [total, setTotal] = useState(0);
   const [gratiCalculada, setGratiCalculada] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!empleado || !empleado.EmpFechaIngreso) return;
 
     const hoy = new Date();
-    const mesActual = hoy.getMonth(); // 0 es Enero, 6 es Julio, 11 es Diciembre
+    const mesActual = hoy.getMonth();
     let montoGratificacion = 0;
 
-    // Se calcula la gratificación ÚNICAMENTE si el mes actual es Julio (6) o Diciembre (11)
     if (mesActual === 6 || mesActual === 11) {
       const fechaIngreso = new Date(empleado.EmpFechaIngreso);
 
-      // Calculamos la diferencia total en meses
       let mesesTrabajados =
         (hoy.getFullYear() - fechaIngreso.getFullYear()) * 12 +
         (hoy.getMonth() - fechaIngreso.getMonth());
 
-      // Restamos 1 mes si aún no ha completado el día exacto
       if (hoy.getDate() < fechaIngreso.getDate()) {
         mesesTrabajados--;
       }
 
-      // El tope máximo es 6 meses
       const mesesComputables = Math.max(0, Math.min(6, mesesTrabajados));
       montoGratificacion = mesesComputables * 50;
     }
@@ -56,12 +63,14 @@ export default function ModalGenerarBoleta({
   if (!isOpen) return null;
 
   const handleConfirm = async () => {
+    setLoading(true);
     const result = await registrarBoleta(
       empleado.EmpCodigo,
       Number(empleado.SalarioFinal),
       gratiCalculada,
       total,
     );
+    setLoading(false);
     if (result.success) {
       window.location.href = `/api/boleta/${empleado.EmpCodigo}?total=${total}&gratificacion=${gratiCalculada}`;
       onClose();
@@ -71,48 +80,104 @@ export default function ModalGenerarBoleta({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-6 rounded-xl shadow-2xl w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4 text-[var(--color-foreground)]">
-          Generar Boleta de Pago
-        </h2>
-        <div className="space-y-2 mb-6 text-[var(--color-muted)]">
-          <p>
-            Empleado:{" "}
-            <span className="font-medium text-[var(--color-foreground)]">
-              {empleado.EmpNombres} {empleado.EmpApellidoPaterno}
-            </span>
-          </p>
-          <p>
-            Salario Base:{" "}
-            <span className="font-medium text-[var(--color-foreground)]">
-              S/. {Number(empleado.SalarioFinal).toFixed(2)}
-            </span>
-          </p>
-          <p>
-            Gratificación:{" "}
-            <span className="font-medium text-[var(--color-foreground)]">
-              S/. {gratiCalculada.toFixed(2)}
-            </span>
-          </p>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Overlay con blur */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+      />
 
-        <div className="text-lg font-bold mb-6 text-[var(--color-foreground)] border-t border-[var(--color-border)] pt-4">
-          Total a Pagar: S/. {total.toFixed(2)}
-        </div>
-
-        <div className="flex justify-end gap-3">
+      {/* Modal */}
+      <div className="relative w-full max-w-md bg-surface border border-border rounded-2xl shadow-xl p-6 animate-fade-in-up z-10">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center shadow-sm shadow-brand/20">
+              <ReceiptText className="w-5 h-5 text-white" strokeWidth={2.5} />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">
+              Generar Boleta
+            </h2>
+          </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-[var(--color-surface-hover)] text-[var(--color-foreground)] rounded-lg hover:opacity-80 transition-opacity"
+            className="p-1.5 rounded-lg hover:bg-surface-hover transition-colors text-muted hover:text-foreground"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Employee info */}
+        <div className="flex items-center gap-3 p-3 bg-surface-hover/50 rounded-xl mb-5 border border-border/50">
+          <div className="w-10 h-10 rounded-full gradient-brand flex items-center justify-center shadow-sm shadow-brand/15 flex-shrink-0">
+            <User className="w-5 h-5 text-white" strokeWidth={2.5} />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground text-sm">
+              {empleado.EmpNombres} {empleado.EmpApellidoPaterno}{" "}
+              {empleado.EmpApellidoMaterno}
+            </p>
+            <p className="text-xs text-muted font-mono">{empleado.EmpCodigo}</p>
+          </div>
+        </div>
+
+        {/* Detalles */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center justify-between py-2 px-3 bg-surface-hover/30 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <DollarSign className="w-4 h-4" />
+              Salario Base
+            </div>
+            <span className="font-semibold text-foreground text-sm">
+              S/. {Number(empleado.SalarioFinal).toFixed(2)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between py-2 px-3 bg-surface-hover/30 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <Gift className="w-4 h-4" />
+              Gratificación
+            </div>
+            <span className="font-semibold text-warning text-sm">
+              S/. {gratiCalculada.toFixed(2)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between py-3 px-4 bg-brand-light rounded-xl border border-brand/10">
+            <div className="flex items-center gap-2 text-sm font-semibold text-brand">
+              <ReceiptText className="w-4 h-4" />
+              Total a Pagar
+            </div>
+            <span className="text-lg font-bold text-brand">
+              S/. {total.toFixed(2)}
+            </span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-2 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2.5 text-sm font-medium text-foreground bg-surface border border-border rounded-xl hover:bg-surface-hover transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 bg-[var(--color-brand)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white gradient-brand rounded-xl shadow-lg shadow-brand/25 hover:shadow-brand/40 transition-all disabled:opacity-70"
           >
-            Confirmar y Descargar
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Procesando...
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4" />
+                Confirmar y Descargar
+              </>
+            )}
           </button>
         </div>
       </div>
