@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginAction } from "@/actions/auth"; 
+import { Building2, LogIn, Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
+import { loginAction } from "@/actions/auth";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
@@ -17,7 +18,6 @@ export default function LoginPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    // Validación cliente básica
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Por favor, ingresa un correo electrónico válido.");
@@ -32,9 +32,8 @@ export default function LoginPage() {
     const result = await loginAction(formData);
 
     if (result.success) {
-      // Redirección del lado del cliente y recarga de estado
       router.push("/");
-      router.refresh(); 
+      router.refresh();
     } else {
       setError(result.message);
       setLoading(false);
@@ -43,53 +42,87 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-base p-4">
-      <div className="w-full max-w-md bg-surface border border-border rounded-xl shadow-card p-8">
+      {/* Fondo decorativo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-brand/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-brand/5 blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-md animate-fade-in-up">
+        {/* Logo y título */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Iniciar Sesión</h1>
-          <p className="text-muted text-sm mt-2">
-            Ingresa al sistema de gestión de empleados
+          <div className="inline-flex gradient-brand rounded-2xl p-3 mb-4 shadow-lg shadow-brand/25">
+            <Building2 className="w-8 h-8 text-white" strokeWidth={2} />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            Gestor RRHH
+          </h1>
+          <p className="text-muted text-sm mt-1.5">
+            Sistema de gestión de empleados
           </p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-3 bg-warning/10 border border-warning/20 text-warning text-sm rounded-lg text-center">
-            {error}
-          </div>
-        )}
+        {/* Card del formulario */}
+        <div className="bg-surface border border-border rounded-2xl shadow-card p-8">
+          {error && (
+            <div className="mb-6 flex items-start gap-3 p-3.5 bg-danger-light border border-danger/20 text-danger text-sm rounded-xl">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
-              name="email"
-              required
-              className="w-full px-4 py-2 bg-base border border-border rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all text-foreground"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="flex items-center gap-1.5 text-sm font-medium text-foreground mb-1.5">
+                <Mail className="w-3.5 h-3.5 text-muted" />
+                Correo Electrónico
+              </label>
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="admin@empresa.com"
+                className="w-full px-4 py-2.5 bg-base border border-border rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all text-foreground placeholder:text-muted/50"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              name="password"
-              required
-              className="w-full px-4 py-2 bg-base border border-border rounded-lg focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-all text-foreground"
-            />
-          </div>
+            <div>
+              <label className="flex items-center gap-1.5 text-sm font-medium text-foreground mb-1.5">
+                <Lock className="w-3.5 h-3.5 text-muted" />
+                Contraseña
+              </label>
+              <input
+                type="password"
+                name="password"
+                required
+                placeholder="••••••••"
+                className="w-full px-4 py-2.5 bg-base border border-border rounded-xl focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all text-foreground placeholder:text-muted/50"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-brand hover:bg-brand-hover text-white font-medium rounded-lg transition-colors shadow-sm disabled:opacity-70"
-          >
-            {loading ? "Verificando credenciales..." : "Ingresar al Sistema"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 gradient-brand text-white font-semibold rounded-xl transition-all shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verificando...
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  Ingresar al Sistema
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-xs text-muted mt-6">
+          &copy; {new Date().getFullYear()} Gestor RRHH. Todos los derechos reservados.
+        </p>
       </div>
     </main>
   );
