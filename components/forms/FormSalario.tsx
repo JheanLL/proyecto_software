@@ -18,7 +18,17 @@ export default function FormSalario({
     e.preventDefault();
     
     const formData = new FormData(e.currentTarget);
-    const nuevoSalario = Number(formData.get('nuevoSalario'));
+    const nuevoSalario = parseFloat(formData.get('nuevoSalario') as string);
+
+    // Validaciones
+    if (isNaN(nuevoSalario) || nuevoSalario <= 0) {
+      toast.error("El salario debe ser un número mayor a 0.");
+      return;
+    }
+    if (nuevoSalario === salarioActual) {
+      toast.error("El nuevo salario debe ser diferente al actual.");
+      return;
+    }
 
     // Toast de confirmación personalizado
     toast((t) => (
