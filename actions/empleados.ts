@@ -14,6 +14,14 @@ function obtenerHoyPeru() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "America/Lima" });
 }
 
+async function obtenerUserIdDesdeJWT(): Promise<number> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
+  if (!token) throw new Error("Sesión no encontrada");
+  const { payload } = await jwtVerify(token, SECRET_KEY);
+  return Number(payload.userId);
+}
+
 export async function agregarEmpleado(
   formData: FormData,
 ): Promise<ActionResult> {
@@ -29,9 +37,13 @@ export async function agregarEmpleado(
   const fechaIngreso = formData.get("fechaIngreso") as string;
   const contratoInicio = formData.get("contratoInicio") as string;
   const contratoFin = formData.get("contratoFin") as string;
-  const salarioInput = formData.get("salario") as string;
-  const salario = salarioInput ? parseFloat(salarioInput) : null;
-  const idUsuarioActual = 1;
+
+  let idUsuarioActual: number;
+  try {
+    idUsuarioActual = await obtenerUserIdDesdeJWT();
+  } catch {
+    return { success: false, message: "Sesión expirada. Vuelve a iniciar sesión." };
+  }
 
   // Validaciones
   const hoyStr = obtenerHoyPeru();
@@ -53,7 +65,7 @@ export async function agregarEmpleado(
 
   try {
     const [areaRows]: any = await pool.query(
-      "SELECT AreaID FROM AREA_TRABAJO WHERE AreaID = ? AND activo = 1",
+      "SELECT AreaID, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ? AND activo = 1",
       [area],
     );
     if (areaRows.length === 0)
@@ -61,6 +73,8 @@ export async function agregarEmpleado(
         success: false,
         message: "El cargo seleccionado no es válido o no está activo.",
       };
+
+    const salarioBase = areaRows[0].AreaSalario;
 
     await pool.query(
       `INSERT INTO EMPLEADO (
@@ -81,13 +95,14 @@ export async function agregarEmpleado(
         fechaIngreso,
         contratoInicio,
         contratoFin,
-        salario,
+        salarioBase,
       ],
     );
 
+    const FechaModificacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorNuevo, UserCodigoHM, FechaModificacion) VALUES (?, 'Registro de Empleado', 'Nuevo Registro', ?, NOW())`,
-      [codigo, idUsuarioActual],
+      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'Registro de Empleado', 'Nuevo Registro', ?, ?)`,
+      [codigo, FechaModificacion, idUsuarioActual],
     );
 
     revalidatePath("/");
@@ -110,7 +125,13 @@ export async function modificarSalario(
   empCodigo: string,
   nuevoSalario: number,
 ): Promise<ActionResult> {
-  const idUsuarioActual = 1;
+  let idUsuarioActual: number;
+  try {
+    idUsuarioActual = await obtenerUserIdDesdeJWT();
+  } catch {
+    return { success: false, message: "Sesión expirada. Vuelve a iniciar sesión." };
+  }
+
   if (isNaN(nuevoSalario) || nuevoSalario <= 0)
     return { success: false, message: "Salario inválido." };
 
@@ -132,12 +153,15 @@ export async function modificarSalario(
       nuevoSalario,
       empCodigo,
     ]);
+
+    const FechaModificacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion) VALUES (?, 'EmpSalario', ?, ?, ?, NOW())`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'EmpSalario', ?, ?, ?, ?)`,
       [
         empCodigo,
         String(salarioAnterior || "Sueldo Base"),
         String(nuevoSalario),
+        FechaModificacion,
         idUsuarioActual,
       ],
     );
@@ -153,14 +177,22 @@ export async function modificarSalario(
 export async function eliminarEmpleado(
   empCodigo: string,
 ): Promise<ActionResult> {
-  const idUsuarioActual = 1;
+  let idUsuarioActual: number;
+  try {
+    idUsuarioActual = await obtenerUserIdDesdeJWT();
+  } catch {
+    return { success: false, message: "Sesión expirada. Vuelve a iniciar sesión." };
+  }
+
   try {
     await pool.query(`UPDATE EMPLEADO SET activo = 0 WHERE EmpCodigo = ?`, [
       empCodigo,
     ]);
+
+    const FechaModificacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
     await pool.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion) VALUES (?, 'Eliminación Lógica', 'Activo', 'Inactivo', ?, NOW())`,
-      [empCodigo, idUsuarioActual],
+      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'Eliminación Lógica', 'Activo', 'Inactivo', ?, ?)`,
+      [empCodigo, FechaModificacion, idUsuarioActual],
     );
     revalidatePath("/");
     return { success: true, message: "Empleado eliminado exitosamente" };
@@ -255,26 +287,11 @@ export async function actualizarEmpleado(
   }
   // ----------------------------
 
-  // EXTRAER EL USUARIO DESDE EL JWT
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
-
-  if (!token) {
-    return {
-      success: false,
-      message: "Acceso denegado: Sesión no encontrada.",
-    };
-  }
-
   let idUsuarioActual: number;
   try {
-    const { payload } = await jwtVerify(token, SECRET_KEY);
-    idUsuarioActual = Number(payload.userId);
-  } catch (error) {
-    return {
-      success: false,
-      message: "Acceso denegado: Sesión expirada o inválida.",
-    };
+    idUsuarioActual = await obtenerUserIdDesdeJWT();
+  } catch {
+    return { success: false, message: "Sesión expirada. Vuelve a iniciar sesión." };
   }
 
   try {
@@ -318,15 +335,18 @@ export async function actualizarEmpleado(
       ],
     );
 
+    const FechaModificacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     if (anterior) {
       if (Number(anterior.AreaID) !== areaId) {
         await pool.query(
-          `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
-           VALUES (?, 'Cambio de Cargo / Área', ?, ?, ?, NOW())`,
+          `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo)
+           VALUES (?, 'Cambio de Cargo / Área', ?, ?, ?, ?)`,
           [
             codigo,
             anterior.AreaNombre || "Sin Cargo",
             nuevoNombreArea,
+            FechaModificacion,
             idUsuarioActual,
           ],
         );
@@ -338,9 +358,9 @@ export async function actualizarEmpleado(
         const formattedNew = `S/. ${salario.toFixed(2)}`;
 
         await pool.query(
-          `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, CampoModificado, ValorAnterior, ValorNuevo, UserCodigoHM, FechaModificacion)
-           VALUES (?, 'Ajuste Salarial', ?, ?, ?, NOW())`,
-          [codigo, formattedOld, formattedNew, idUsuarioActual],
+          `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo)
+           VALUES (?, 'Ajuste Salarial', ?, ?, ?, ?)`,
+          [codigo, formattedOld, formattedNew, FechaModificacion, idUsuarioActual],
         );
       }
     }
