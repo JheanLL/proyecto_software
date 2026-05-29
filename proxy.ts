@@ -42,7 +42,7 @@ export async function proxy(request: NextRequest) {
 // Configurar en qué rutas se activa este vigilante
 export const config = {
   matcher: [
-    // Se activa en TODAS las rutas excepto en archivos estáticos, imágenes o llamadas a la API de Next
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // Se activa en TODAS las rutas excepto api, _next, favicon y extensiones de imagen (.png, .jpg, .jpeg)
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$).*)',
   ],
 };
