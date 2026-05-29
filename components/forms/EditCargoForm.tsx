@@ -50,6 +50,14 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
       return;
     }
 
+    // Si no hubo ningún cambio, mostrar éxito sin llamar al backend
+    const nombreOriginal = cargo.AreaNombre.trim();
+    const salarioOriginal = Number(cargo.AreaSalario);
+    if (nuevoNombre.trim() === nombreOriginal && nuevoSalario === salarioOriginal) {
+      toast.success("Cargo actualizado exitosamente");
+      return;
+    }
+
     // Abrir modal de confirmación en lugar del toast
     setPendingUpdate({ formData: currentFormData, nuevoNombre, nuevoSalario });
     setIsUpdateModalOpen(true);
