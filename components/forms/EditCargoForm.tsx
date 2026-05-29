@@ -1,9 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { eliminarCargo, modificarCargo } from "@/actions/cargos";
 import { Save, Trash2, Tags } from "lucide-react";
+import ModalConfirmCargo from "@/components/ui/ModalConfirmCargo";
 
 interface EditCargoFormProps {
   cargo: {
@@ -15,6 +17,22 @@ interface EditCargoFormProps {
 
 export default function EditCargoForm({ cargo }: EditCargoFormProps) {
   const formId = `edit-form-${cargo.AreaID}`;
+  const [mounted, setMounted] = useState(false);
+
+  // Modal para actualizar
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState<{
+    formData: FormData;
+    nuevoNombre: string;
+    nuevoSalario: number;
+  } | null>(null);
+
+  // Modal para eliminar
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,51 +50,41 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
       return;
     }
 
-    toast(
-      (t) => (
-        <div className="flex flex-col gap-3">
-          <p className="font-medium text-sm">
-            ¿Actualizar cargo a <b>{nuevoNombre}</b> con{" "}
-            <b>S/. {nuevoSalario.toFixed(2)}</b>?
-          </p>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => toast.dismiss(t.id)}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:bg-surface-hover transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={async () => {
-                toast.dismiss(t.id);
-                const loadingToast = toast.loading("Actualizando cargo...");
-                try {
-                  const result = await modificarCargo(currentFormData);
-                  if (result.success) {
-                    toast.success(result.message, { id: loadingToast });
-                  } else {
-                    toast.error(result.message, { id: loadingToast });
-                  }
-                } catch (error) {
-                  toast.error("Error al procesar la solicitud", {
-                    id: loadingToast,
-                  });
-                }
-              }}
-              className="px-3 py-1.5 text-xs font-medium bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors"
-            >
-              Confirmar
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        duration: 5000,
-        position: "top-center",
-      },
-    );
+    // Abrir modal de confirmación en lugar del toast
+    setPendingUpdate({ formData: currentFormData, nuevoNombre, nuevoSalario });
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleUpdateConfirm = async () => {
+    if (!pendingUpdate) return;
+    const loadingToast = toast.loading("Actualizando cargo...");
+    try {
+      const result = await modificarCargo(pendingUpdate.formData);
+      if (result.success) {
+        toast.success(result.message, { id: loadingToast });
+      } else {
+        toast.error(result.message, { id: loadingToast });
+      }
+    } catch (error) {
+      toast.error("Error al procesar la solicitud", { id: loadingToast });
+    }
+    setIsUpdateModalOpen(false);
+    setPendingUpdate(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    const loadingToast = toast.loading("Eliminando cargo...");
+    try {
+      const result = await eliminarCargo(cargo.AreaID);
+      if (result.success) {
+        toast.success(result.message, { id: loadingToast });
+      } else {
+        toast.error(result.message, { id: loadingToast });
+      }
+    } catch (error) {
+      toast.error("Error al procesar la solicitud", { id: loadingToast });
+    }
+    setIsDeleteModalOpen(false);
   };
 
   return (
@@ -138,16 +146,7 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
               Actualizar
             </button>
             <button
-              onClick={async () => {
-                if (confirm("¿Estás seguro de eliminar este cargo?")) {
-                  const result = await eliminarCargo(cargo.AreaID);
-                  if (result.success) {
-                    toast.success(result.message);
-                  } else {
-                    toast.error(result.message);
-                  }
-                }
-              }}
+              onClick={() => setIsDeleteModalOpen(true)}
               type="button"
               className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-danger bg-danger-light border border-danger/10 rounded-xl hover:bg-danger/10 transition-colors"
             >
@@ -157,6 +156,38 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
           </div>
         </td>
       </tr>
+
+      {/* Modales renderizados con portal fuera del <tbody> */}
+      {mounted &&
+        createPortal(
+          <>
+            {/* Modal de confirmación para actualizar */}
+            {pendingUpdate && (
+              <ModalConfirmCargo
+                isOpen={isUpdateModalOpen}
+                onClose={() => {
+                  setIsUpdateModalOpen(false);
+                  setPendingUpdate(null);
+                }}
+                onConfirm={handleUpdateConfirm}
+                cargo={cargo}
+                mode="update"
+                nuevoNombre={pendingUpdate.nuevoNombre}
+                nuevoSalario={pendingUpdate.nuevoSalario}
+              />
+            )}
+
+            {/* Modal de confirmación para eliminar */}
+            <ModalConfirmCargo
+              isOpen={isDeleteModalOpen}
+              onClose={() => setIsDeleteModalOpen(false)}
+              onConfirm={handleDeleteConfirm}
+              cargo={cargo}
+              mode="delete"
+            />
+          </>,
+          document.body,
+        )}
     </>
   );
 }
