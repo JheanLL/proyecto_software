@@ -10,7 +10,7 @@ export default async function NuevoEmpleadoPage() {
   const areas = rows as any[];
 
   return (
-    <main className="min-h-screen p-6 md:p-8 lg:p-12 max-w-5xl mx-auto animate-fade-in">
+    <main className="min-h-screen p-4 md:p-6 lg:p-8 max-w-5xl mx-auto animate-fade-in">
       <div className="mb-8">
         <Link
           href="/"

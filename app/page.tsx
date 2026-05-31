@@ -59,7 +59,7 @@ export default async function Page() {
     );
 
     return (
-      <main className="min-h-screen p-6 md:p-8 lg:p-12">
+      <main className="min-h-screen p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto animate-fade-in">
           {/* Header */}
           <div className="mb-8">
@@ -156,7 +156,7 @@ export default async function Page() {
   } catch (error) {
     console.error("Error cargando datos del dashboard:", error);
     return (
-      <main className="min-h-screen flex items-center justify-center p-6">
+      <main className="min-h-screen flex items-center justify-center p-4">
         <div className="bg-surface border border-border rounded-xl p-8 max-w-md w-full text-center shadow-sm">
           <AlertCircle className="w-12 h-12 text-danger mx-auto mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">

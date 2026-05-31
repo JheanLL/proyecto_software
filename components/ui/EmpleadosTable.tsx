@@ -131,36 +131,39 @@ export default function EmpleadosTable({
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+                      <div className="flex flex-row md:flex-nowrap items-center justify-center gap-1">
                         <button
                           onClick={() => {
                             setSelectedEmp(emp);
                             setIsModalOpen(true);
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-info bg-info-light border border-info/10 rounded-lg hover:bg-info/10 transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-info bg-info-light border border-info/10 rounded-lg hover:bg-info/10 transition-colors"
                           title="Generar boleta de pago"
                         >
                           <FileText className="w-3.5 h-3.5" />
-                          Boleta
+                          <span className="hidden sm:inline">Boleta</span>
+                          <span className="sm:hidden">Bol.</span>
                         </button>
                         <Link
                           href={`/empleados/${emp.EmpCodigo}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-warning bg-warning-light border border-warning/10 rounded-lg hover:bg-warning/10 transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-warning bg-warning-light border border-warning/10 rounded-lg hover:bg-warning/10 transition-colors"
                           title="Editar empleado"
                         >
                           <Pencil className="w-3.5 h-3.5" />
-                          Editar
+                          <span className="hidden sm:inline">Editar</span>
+                          <span className="sm:hidden">Ed.</span>
                         </Link>
                         <button
                           onClick={() => {
                             setDeletingEmp(emp);
                             setIsDeleteModalOpen(true);
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger bg-danger-light border border-danger/10 rounded-lg hover:bg-danger/10 transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-danger bg-danger-light border border-danger/10 rounded-lg hover:bg-danger/10 transition-colors"
                           title="Eliminar empleado"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          Eliminar
+                          <span className="hidden sm:inline">Eliminar</span>
+                          <span className="sm:hidden">Elim.</span>
                         </button>
                       </div>
                     </td>

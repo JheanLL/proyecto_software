@@ -53,9 +53,9 @@ export default function NewCargoForm() {
       <form
         ref={formRef}
         onSubmit={handleSubmit}
-        className="flex flex-col md:flex-row gap-4 items-end"
+        className="flex flex-col gap-4 md:flex-row md:items-end"
       >
-        <div className="w-full md:w-2/5">
+        <div className="w-full md:w-2/5 min-w-[200px]">
           <label
             htmlFor="nombre-cargo"
             className="block text-sm font-medium text-foreground mb-1.5"
@@ -72,7 +72,7 @@ export default function NewCargoForm() {
           />
         </div>
 
-        <div className="w-full md:w-2/5">
+        <div className="w-full md:w-2/5 min-w-[200px]">
           <label
             htmlFor="salario-cargo"
             className="block text-sm font-medium text-foreground mb-1.5"
@@ -95,12 +95,12 @@ export default function NewCargoForm() {
           </div>
         </div>
 
-        <div className="w-full md:w-1/5">
+        <div className="w-full md:w-1/5 min-w-[140px]">
           <button
             type="submit"
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-success hover:bg-success/90 rounded-xl transition-all shadow-sm hover:shadow-md"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-success hover:bg-success/90 rounded-xl transition-all shadow-sm hover:shadow-md whitespace-nowrap"
           >
-            <Plus className="w-4 h-4" strokeWidth={2.5} />
+            <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
             Crear Cargo
           </button>
         </div>

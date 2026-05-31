@@ -48,7 +48,7 @@ export default async function AuditoriaPage() {
   };
 
   return (
-    <main className="min-h-screen p-6 md:p-8 lg:p-12 max-w-6xl mx-auto animate-fade-in">
+    <main className="min-h-screen p-4 md:p-6 lg:p-8 max-w-6xl mx-auto animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -146,7 +146,7 @@ export default async function AuditoriaPage() {
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-muted min-w-75">
+                    <td className="px-6 py-4 text-muted min-w-0 max-w-xs md:max-w-none">
                       {reg.HMEmpCodigo ? (
                         <span>
                           Para el empleado{" "}

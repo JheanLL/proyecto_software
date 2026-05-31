@@ -37,7 +37,7 @@ export default async function PerfilEmpleadoPage({
   const historial = historialRows as any[];
 
   return (
-    <main className="min-h-screen p-4 sm:p-8 lg:p-12 max-w-7xl mx-auto animate-fade-in">
+    <main className="min-h-screen p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
@@ -71,7 +71,7 @@ export default async function PerfilEmpleadoPage({
         </div>
 
         {/* Panel Derecho: Historial */}
-        <div className="bg-surface border border-border rounded-2xl p-6 shadow-card min-h-[500px]">
+        <div className="bg-surface border border-border rounded-2xl p-6 shadow-card min-h-[300px] md:min-h-[500px]">
           <div className="flex items-center gap-2 mb-5">
             <div className="w-8 h-8 rounded-lg bg-warning-light flex items-center justify-center">
               <Clock className="w-4 h-4 text-warning" strokeWidth={2.5} />
@@ -103,19 +103,19 @@ export default async function PerfilEmpleadoPage({
                       ) : null}
                       <div className="relative flex space-x-3">
                         <div>
-                          <span
-                            className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-surface ${
-                              isSalario
-                                ? "bg-info-light text-info"
-                                : "bg-brand-light text-brand"
-                            }`}
-                          >
-                            {isSalario ? (
-                              <DollarSign className="w-4 h-4" />
-                            ) : (
-                              <Briefcase className="w-4 h-4" />
-                            )}
-                          </span>
+                      <span
+                        className={`h-8 w-8 rounded-full flex items-center justify-center ring-4 md:ring-8 ring-surface ${
+                          isSalario
+                            ? "bg-info-light text-info"
+                            : "bg-brand-light text-brand"
+                        }`}
+                      >
+                        {isSalario ? (
+                          <DollarSign className="w-4 h-4" />
+                        ) : (
+                          <Briefcase className="w-4 h-4" />
+                        )}
+                      </span>
                         </div>
                         <div className="flex-1 min-w-0 pt-1.5">
                           <p className="text-sm font-semibold text-foreground">

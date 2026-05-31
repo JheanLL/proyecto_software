@@ -113,7 +113,7 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
           </span>
         </td>
 
-        <td className="px-6 py-4">
+        <td className="px-6 py-4 min-w-[240px]">
           <input
             form={formId}
             type="text"
@@ -121,12 +121,12 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
             defaultValue={cargo.AreaNombre}
             required
             aria-label={`Nombre de cargo para código ${cargo.AreaID}`}
-            className="w-full max-w-[400px] px-3 py-2 bg-base border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
+            className="w-full min-w-0 px-3 py-2 bg-base border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
           />
         </td>
 
-        <td className="px-6 py-4">
-          <div className="relative w-full max-w-[200px]">
+        <td className="px-6 py-4 min-w-[240px]">
+          <div className="relative w-full min-w-0 max-w-[240px]">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm font-semibold">
               S/.
             </span>
@@ -143,23 +143,25 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
           </div>
         </td>
 
-        <td className="px-6 py-4 text-right">
-          <div className="flex items-center justify-end gap-2">
+        <td className="px-4 sm:px-6 py-4 text-right">
+          <div className="flex items-center justify-end gap-1 sm:gap-2">
             <button
               form={formId}
               type="submit"
-              className="inline-flex items-center gap-1.5 px-4 py-2 font-medium text-sm bg-brand text-white rounded-xl hover:bg-brand-hover transition-all shadow-sm hover:shadow-md"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-2 font-medium text-xs sm:text-sm bg-brand text-white rounded-xl hover:bg-brand-hover transition-all shadow-sm hover:shadow-md"
+              title="Actualizar cargo"
             >
               <Save className="w-3.5 h-3.5" />
-              Actualizar
+              <span>Actualizar</span>
             </button>
             <button
               onClick={() => setIsDeleteModalOpen(true)}
               type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-danger bg-danger-light border border-danger/10 rounded-xl hover:bg-danger/10 transition-colors"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-medium text-danger bg-danger-light border border-danger/10 rounded-xl hover:bg-danger/10 transition-colors"
+              title="Eliminar cargo"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Eliminar
+              <span>Eliminar</span>
             </button>
           </div>
         </td>

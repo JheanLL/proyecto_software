@@ -11,7 +11,7 @@ export default async function CargosPage() {
   const cargos = rows as any[];
 
   return (
-    <main className="min-h-screen p-6 md:p-8 lg:p-12 max-w-5xl mx-auto animate-fade-in">
+    <main className="min-h-screen p-4 md:p-6 lg:p-8 max-w-5xl mx-auto animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -40,16 +40,16 @@ export default async function CargosPage() {
                 <th className="px-6 py-4 text-xs font-semibold text-muted uppercase tracking-wider w-16 whitespace-nowrap">
                   ID
                 </th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase tracking-wider min-w-[200px]">
+                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase tracking-wider min-w-[140px] sm:min-w-[200px]">
                   <div className="flex items-center gap-1.5">
                     <Briefcase className="w-3.5 h-3.5" />
                     Nombre del Cargo / Área
                   </div>
                 </th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase tracking-wider min-w-[150px]">
+                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase tracking-wider min-w-[120px] sm:min-w-[150px]">
                   Salario Base
                 </th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase tracking-wider text-center w-32 whitespace-nowrap">
+                <th className="px-6 py-4 text-xs font-semibold text-muted uppercase tracking-wider text-center w-24 sm:w-32 whitespace-nowrap">
                   Acción
                 </th>
               </tr>
