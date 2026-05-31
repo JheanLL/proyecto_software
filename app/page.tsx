@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Download,
   AlertCircle,
+  Users,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -105,67 +106,63 @@ export default async function Page() {
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6'>
-            <div className='bg-surface border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow'>
-              <div className='flex items-center gap-3'>
-                <div className='w-10 h-10 rounded-xl bg-brand-light flex items-center justify-center'>
-                  <Briefcase className='w-5 h-5 text-brand' />
+          {/* Stats & Actions */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6'>
+            <div className='bg-surface border border-border rounded-xl p-5 shadow-sm flex items-center gap-4'>
+                <div className='w-12 h-12 rounded-xl bg-brand-light flex items-center justify-center shrink-0'>
+                  <Users className='w-6 h-6 text-brand' />
                 </div>
                 <div>
                   <p className='text-2xl font-bold text-foreground'>
                     {empleados.length}
                   </p>
-                  <p className='text-xs text-muted font-medium'>
+                  <p className='text-sm text-muted font-medium'>
                     Empleados activos
                   </p>
                 </div>
-              </div>
             </div>
 
-            <div className='bg-surface border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow'>
-              <div className='flex items-center gap-3'>
-                <div className='w-10 h-10 rounded-xl bg-success-light flex items-center justify-center'>
-                  <Download className='w-5 h-5 text-success' />
+            <a href='/api/informe' className='group bg-surface border border-border rounded-xl p-5 shadow-sm hover:shadow-md hover:border-success/50 hover:bg-success/5 transition-all flex items-center gap-4 cursor-pointer'>
+                <div className='w-12 h-12 rounded-xl bg-success-light group-hover:bg-success group-hover:scale-110 transition-all duration-300 flex items-center justify-center shrink-0'>
+                  <Download className='w-6 h-6 text-success group-hover:text-white transition-colors' />
                 </div>
                 <div>
-                  <p className='text-sm font-semibold text-foreground'>
+                  <p className='text-base font-bold text-foreground group-hover:text-success transition-colors'>
                     Informe
                   </p>
-                  <a
-                    href='/api/informe'
-                    className='text-xs text-brand hover:text-brand-hover font-medium transition-colors'>
-                    Descargar reporte &rarr;
-                  </a>
+                  <p className='text-xs text-muted font-medium mt-0.5'>
+                    Descargar reporte
+                  </p>
                 </div>
-              </div>
-            </div>
+            </a>
 
-            <div className='bg-surface border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow'>
-              <div className='flex items-center gap-3'>
-                <div className='w-10 h-10 rounded-xl bg-warning-light flex items-center justify-center'>
-                  <ClipboardList className='w-5 h-5 text-warning' />
+            <Link href='/cargos' className='group bg-surface border border-border rounded-xl p-5 shadow-sm hover:shadow-md hover:border-brand/50 hover:bg-brand/5 transition-all flex items-center gap-4 cursor-pointer'>
+                <div className='w-12 h-12 rounded-xl bg-brand-light group-hover:bg-brand group-hover:scale-110 transition-all duration-300 flex items-center justify-center shrink-0'>
+                  <Briefcase className='w-6 h-6 text-brand group-hover:text-white transition-colors' />
                 </div>
                 <div>
-                  <p className='text-sm font-semibold text-foreground'>
-                    Accesos rápidos
+                  <p className='text-base font-bold text-foreground group-hover:text-brand transition-colors'>
+                    Cargos
                   </p>
-                  <div className='flex gap-2 mt-1'>
-                    <Link
-                      href='/cargos'
-                      className='text-xs text-brand hover:text-brand-hover font-medium transition-colors'>
-                      Cargos
-                    </Link>
-                    <span className='text-border'>|</span>
-                    <Link
-                      href='/auditoria'
-                      className='text-xs text-brand hover:text-brand-hover font-medium transition-colors'>
-                      Auditoría
-                    </Link>
-                  </div>
+                  <p className='text-xs text-muted font-medium mt-0.5'>
+                    Gestionar áreas
+                  </p>
                 </div>
-              </div>
-            </div>
+            </Link>
+
+            <Link href='/auditoria' className='group bg-surface border border-border rounded-xl p-5 shadow-sm hover:shadow-md hover:border-warning/50 hover:bg-warning/5 transition-all flex items-center gap-4 cursor-pointer'>
+                <div className='w-12 h-12 rounded-xl bg-warning-light group-hover:bg-warning group-hover:scale-110 transition-all duration-300 flex items-center justify-center shrink-0'>
+                  <ClipboardList className='w-6 h-6 text-warning group-hover:text-white transition-colors' />
+                </div>
+                <div>
+                  <p className='text-base font-bold text-foreground group-hover:text-warning transition-colors'>
+                    Auditoría
+                  </p>
+                  <p className='text-xs text-muted font-medium mt-0.5'>
+                    Ver registros
+                  </p>
+                </div>
+            </Link>
           </div>
         </div>
 
