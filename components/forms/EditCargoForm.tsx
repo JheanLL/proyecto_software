@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { eliminarCargo, modificarCargo } from "@/actions/cargos";
@@ -17,7 +17,11 @@ interface EditCargoFormProps {
 
 export default function EditCargoForm({ cargo }: EditCargoFormProps) {
   const formId = `edit-form-${cargo.AreaID}`;
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Modal para actualizar
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -29,10 +33,6 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
 
   // Modal para eliminar
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -73,7 +73,7 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
       } else {
         toast.error(result.message, { id: loadingToast });
       }
-    } catch (error) {
+    } catch {
       toast.error("Error al procesar la solicitud", { id: loadingToast });
     }
     setIsUpdateModalOpen(false);
@@ -89,7 +89,7 @@ export default function EditCargoForm({ cargo }: EditCargoFormProps) {
       } else {
         toast.error(result.message, { id: loadingToast });
       }
-    } catch (error) {
+    } catch {
       toast.error("Error al procesar la solicitud", { id: loadingToast });
     }
     setIsDeleteModalOpen(false);

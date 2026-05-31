@@ -28,7 +28,7 @@ export async function proxy(request: NextRequest) {
       if (isPublicPath && pathname === '/login') {
         return NextResponse.redirect(new URL('/', request.url));
       }
-    } catch (error) {
+    } catch {
       // Si el token expiró o es falso, lo borramos y lo mandamos al login
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.delete('auth_token');

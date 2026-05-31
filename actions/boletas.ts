@@ -1,9 +1,9 @@
-"use server";
+'use server';
 
-import pool from "@/lib/db";
-import { revalidatePath } from "next/cache";
-import { ActionResult } from "@/types";
-import { calcularGratificacion as calcularGrati } from "@/lib/gratificacion";
+import pool from '@/lib/db';
+import { revalidatePath } from 'next/cache';
+import { ActionResult } from '@/types';
+import { calcularGratificacion as calcularGrati } from '@/lib/gratificacion';
 
 function obtenerHoyPeru() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
@@ -11,22 +11,31 @@ function obtenerHoyPeru() {
 
 export async function generarBoletasMes(): Promise<ActionResult> {
   const hoyStr = obtenerHoyPeru();
-  const [yyyy, mm] = hoyStr.split("-");
+  const [yyyy, mm] = hoyStr.split('-');
   const fechaBoleta = `${yyyy}-${mm}-01`;
-  const mesActual = parseInt(mm) - 1;
 
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    const [existentes]: unknown = await connection.query(
+    const [existentes]: any = await connection.query(
       "SELECT COUNT(*) as count FROM BOLETA_PAGO WHERE DATE_FORMAT(BoletaFechaBoleta, '%Y-%m') = ?",
-      [`${yyyy}-${mm}`]
+      [`${yyyy}-${mm}`],
     );
-    if (existentes[0].count > 0) return { success: false, message: `La planilla de ${yyyy}-${mm} ya fue procesada.` };
+    if (existentes[0].count > 0)
+      return {
+        success: false,
+        message: `La planilla de ${yyyy}-${mm} ya fue procesada.`,
+      };
 
-    const [empleados]: unknown = await connection.query(`SELECT e.EmpCodigo, e.EmpFechaIngreso, COALESCE(e.EmpSalario, a.AreaSalario) AS Salario FROM EMPLEADO e INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID WHERE e.activo = 1`);
-    if (empleados.length === 0) return { success: false, message: "No hay empleados registrados para generar boletas." };
+    const [empleados]: any = await connection.query(
+      `SELECT e.EmpCodigo, e.EmpFechaIngreso, COALESCE(e.EmpSalario, a.AreaSalario) AS Salario FROM EMPLEADO e INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID WHERE e.activo = 1`,
+    );
+    if (empleados.length === 0)
+      return {
+        success: false,
+        message: 'No hay empleados registrados para generar boletas.',
+      };
 
     for (const emp of empleados) {
       const salarioBase = Number(emp.Salario);
@@ -34,39 +43,56 @@ export async function generarBoletasMes(): Promise<ActionResult> {
       const totalPago = salarioBase + gratificacion;
       await connection.query(
         `INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, ?, ?, ?, ?)`,
-        [emp.EmpCodigo, fechaBoleta, salarioBase, gratificacion, totalPago]
+        [emp.EmpCodigo, fechaBoleta, salarioBase, gratificacion, totalPago],
       );
     }
 
     await connection.commit();
-    revalidatePath("/boletas");
-    return { success: true, message: `Planilla de ${yyyy}-${mm} generada para ${empleados.length} empleados.` };
+    revalidatePath('/boletas');
+    return {
+      success: true,
+      message: `Planilla de ${yyyy}-${mm} generada para ${empleados.length} empleados.`,
+    };
   } catch (error) {
     await connection.rollback();
-    console.error("Error al procesar planilla:", error);
-    return { success: false, message: "Error interno al procesar la planilla." };
+    console.error('Error al procesar planilla:', error);
+    return {
+      success: false,
+      message: 'Error interno al procesar la planilla.',
+    };
   } finally {
     connection.release();
   }
 }
 
-export async function registrarBoleta(empCodigo: string, salarioBase: number, gratificacion: number, totalPago: number): Promise<ActionResult> {
+export async function registrarBoleta(
+  empCodigo: string,
+  salarioBase: number,
+  gratificacion: number,
+  totalPago: number,
+): Promise<ActionResult> {
   try {
-    const [existing]: unknown = await pool.query(
+    const [existing]: any = await pool.query(
       `SELECT BoletaID FROM BOLETA_PAGO WHERE EmpCodigo = ? AND MONTH(BoletaFechaBoleta) = MONTH(CURDATE()) AND YEAR(BoletaFechaBoleta) = YEAR(CURDATE())`,
-      [empCodigo]
+      [empCodigo],
     );
 
     if (existing.length > 0) {
-      await pool.query(`UPDATE BOLETA_PAGO SET BoletaSalarioBase = ?, BoletaGratificacion = ?, BoletaTotalPago = ? WHERE BoletaID = ?`, [salarioBase, gratificacion, totalPago, existing[0].BoletaID]);
+      await pool.query(
+        `UPDATE BOLETA_PAGO SET BoletaSalarioBase = ?, BoletaGratificacion = ?, BoletaTotalPago = ? WHERE BoletaID = ?`,
+        [salarioBase, gratificacion, totalPago, existing[0].BoletaID],
+      );
     } else {
-      await pool.query(`INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, CURDATE(), ?, ?, ?)`, [empCodigo, salarioBase, gratificacion, totalPago]);
+      await pool.query(
+        `INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, CURDATE(), ?, ?, ?)`,
+        [empCodigo, salarioBase, gratificacion, totalPago],
+      );
     }
 
-    revalidatePath("/");
-    return { success: true, message: "Boleta registrada exitosamente" };
+    revalidatePath('/');
+    return { success: true, message: 'Boleta registrada exitosamente' };
   } catch (error) {
-    console.error("Error al registrar boleta:", error);
-    return { success: false, message: "Error al registrar la boleta" };
+    console.error('Error al registrar boleta:', error);
+    return { success: false, message: 'Error al registrar la boleta' };
   }
 }

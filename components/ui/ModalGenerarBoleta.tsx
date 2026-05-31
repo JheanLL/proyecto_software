@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { registrarBoleta } from "@/actions/boletas";
 import {
   X,
@@ -30,12 +30,12 @@ export default function ModalGenerarBoleta({
   onClose,
   empleado,
 }: ModalProps) {
-  const [total, setTotal] = useState(0);
-  const [gratiCalculada, setGratiCalculada] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!empleado || !empleado.EmpFechaIngreso) return;
+  const { gratiCalculada, total } = useMemo(() => {
+    if (!empleado || !empleado.EmpFechaIngreso) {
+      return { gratiCalculada: 0, total: 0 };
+    }
 
     const hoy = new Date();
     const mesActual = hoy.getMonth();
@@ -56,9 +56,11 @@ export default function ModalGenerarBoleta({
       montoGratificacion = mesesComputables * 50;
     }
 
-    setGratiCalculada(montoGratificacion);
-    setTotal(Number(empleado.SalarioFinal) + montoGratificacion);
-  }, [empleado?.SalarioFinal, empleado?.EmpFechaIngreso, isOpen]);
+    return {
+      gratiCalculada: montoGratificacion,
+      total: Number(empleado.SalarioFinal) + montoGratificacion,
+    };
+  }, [empleado]);
 
   if (!isOpen) return null;
 

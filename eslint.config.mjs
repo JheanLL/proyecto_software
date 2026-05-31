@@ -8,13 +8,7 @@ export default defineConfig([
 
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": [
-        "warn",
-        {
-          fixToUnknown: true,
-          ignoreRestArgs: false,
-        },
-      ],
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 

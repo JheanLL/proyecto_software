@@ -34,7 +34,7 @@ export default function NewCargoForm() {
       } else {
         toast.error(result.message, { id: loadingToast });
       }
-    } catch (error) {
+    } catch {
       toast.error("Error al procesar la solicitud", { id: loadingToast });
     }
   };

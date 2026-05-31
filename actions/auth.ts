@@ -1,22 +1,22 @@
-"use server";
+'use server';
 
-import pool from "@/lib/db";
-import { SignJWT } from "jose";
-import { cookies } from "next/headers";
+import pool from '@/lib/db';
+import { SignJWT } from 'jose';
+import { cookies } from 'next/headers';
 
 export async function loginAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
 
   try {
     // 1. Clave secreta con fallback seguro dentro del try/catch
     const secret =
-      process.env.JWT_SECRET || "mi_clave_secreta_super_segura_para_desarrollo";
+      process.env.JWT_SECRET || 'mi_clave_secreta_super_segura_para_desarrollo';
     const SECRET_KEY = new TextEncoder().encode(secret);
 
     // 2. Buscar al usuario
-    const [rows]: unknown = await pool.query(
-      "SELECT UserCodigo, UserNombre, UserPassword, RolID FROM USUARIO WHERE UserCorreo = ?",
+    const [rows]: any = await pool.query(
+      'SELECT UserCodigo, UserNombre, UserPassword, RolID FROM USUARIO WHERE UserCorreo = ?',
       [email],
     );
 
@@ -24,7 +24,7 @@ export async function loginAction(formData: FormData) {
 
     // 3. Validar existencia y contraseña
     if (!user || password !== user.UserPassword) {
-      return { success: false, message: "Correo o contraseña incorrectos" };
+      return { success: false, message: 'Correo o contraseña incorrectos' };
     }
 
     // 4. Crear el Token JWT
@@ -33,28 +33,28 @@ export async function loginAction(formData: FormData) {
       userName: user.UserNombre,
       roleId: user.RolID,
     })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("8h")
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('8h')
       .sign(SECRET_KEY);
 
     // 5. Guardar el token en la Cookie
     const cookieStore = await cookies();
-    cookieStore.set("auth_token", token, {
+    cookieStore.set('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 8, // 8 horas
-      path: "/",
+      path: '/',
     });
 
-    return { success: true, message: "Login exitoso" };
+    return { success: true, message: 'Login exitoso' };
   } catch (error) {
-    console.error("Error en login:", error);
-    return { success: false, message: "Error interno del servidor" };
+    console.error('Error en login:', error);
+    return { success: false, message: 'Error interno del servidor' };
   }
 }
 
 export async function logoutAction() {
   const cookieStore = await cookies();
-  cookieStore.delete("auth_token");
+  cookieStore.delete('auth_token');
 }
