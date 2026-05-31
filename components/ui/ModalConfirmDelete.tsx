@@ -40,14 +40,19 @@ export default function ModalConfirmDelete({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-surface border border-border rounded-2xl shadow-xl p-6 animate-fade-in-up z-10">
+      <div 
+        className="relative w-full max-w-md bg-surface border border-border rounded-2xl shadow-xl p-6 animate-fade-in-up z-10"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl gradient-danger flex items-center justify-center shadow-sm shadow-danger/20">
               <AlertTriangle className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <h2 className="text-lg font-bold text-foreground">
+            <h2 id="modal-title" className="text-lg font-bold text-foreground">
               Confirmar Eliminación
             </h2>
           </div>
