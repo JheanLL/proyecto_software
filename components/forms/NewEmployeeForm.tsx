@@ -10,9 +10,15 @@ import { Hash, IdCard, User, Calendar, Mail, Briefcase, Users, Save, X, Loader2,
 interface Area { AreaID: number; AreaNombre: string; }
 interface NewEmployeeFormProps { areas: Area[]; }
 
-// 1. SOLUCIÓN AL BUG: Sacar el subcomponente fuera del principal para evitar que se desmonte
-const InputField = ({ icon: Icon, label, ...props }: any) => (
-  <div>
+interface InputFieldProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  className?: string;
+  [key: string]: unknown;
+}
+
+const InputField = ({ icon: Icon, label, className, ...props }: InputFieldProps) => (
+  <div className={className}>
     <label className="flex items-center gap-1.5 text-sm font-medium text-foreground mb-1.5">
       <Icon className="w-3.5 h-3.5 text-muted" />
       {label}
@@ -24,34 +30,40 @@ const InputField = ({ icon: Icon, label, ...props }: any) => (
   </div>
 );
 
+function getDefaultFechas() {
+  const hoy = new Date();
+  const y = hoy.getFullYear();
+  const m = hoy.getMonth();
+  const d = hoy.getDate();
+  const esDia1 = d === 1;
+
+  const inicio = new Date(y, esDia1 ? m : m + 1, 1);
+  const fin = new Date(y, esDia1 ? m + 6 : m + 7, 1);
+
+  const format = (date: Date) => 
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+  return { inicio: format(inicio), fin: format(fin) };
+}
+
+function getDefaultFechaNac() {
+  const hoy = new Date();
+  const y = hoy.getFullYear();
+  const m = hoy.getMonth();
+  const d = hoy.getDate();
+  const hace18 = new Date(y - 18, m, d);
+  return `${hace18.getFullYear()}-${String(hace18.getMonth() + 1).padStart(2, "0")}-${String(hace18.getDate()).padStart(2, "0")}`;
+}
+
 export default function NewEmployeeForm({ areas }: NewEmployeeFormProps) {
   const router = useRouter();
   const [codigoAuto, setCodigoAuto] = useState("Cargando...");
   const [submitting, setSubmitting] = useState(false);
-  const [fechas, setFechas] = useState({ inicio: "", fin: "" });
-  const [fechaNacDefault, setFechaNacDefault] = useState("");
+  const [fechas, setFechas] = useState(getDefaultFechas);
+  const [fechaNacDefault] = useState(getDefaultFechaNac);
 
   useEffect(() => {
     obtenerProximoCodigo().then(setCodigoAuto);
-
-    const hoy = new Date();
-    const y = hoy.getFullYear();
-    const m = hoy.getMonth();
-    const d = hoy.getDate();
-    const esDia1 = d === 1;
-
-    // Calcular fechas de contrato
-    const inicio = new Date(y, esDia1 ? m : m + 1, 1);
-    const fin = new Date(y, esDia1 ? m + 6 : m + 7, 1);
-
-    const format = (date: Date) => 
-      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-
-    setFechas({ inicio: format(inicio), fin: format(fin) });
-
-    // 2. SOLUCIÓN A FECHA NACIMIENTO: Por defecto hace 18 años
-    const hace18 = new Date(y - 18, m, d);
-    setFechaNacDefault(format(hace18));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -111,7 +123,7 @@ export default function NewEmployeeForm({ areas }: NewEmployeeFormProps) {
   return (
     <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-2xl shadow-card p-6 md:p-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="col-span-2 md:col-span-1">
+        <div className="md:col-span-2">
           <label className="flex items-center gap-1.5 text-sm font-medium text-foreground mb-1.5">
             <Hash className="w-3.5 h-3.5 text-muted" /> Código de Empleado
           </label>

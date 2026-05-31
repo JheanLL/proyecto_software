@@ -15,4 +15,8 @@ const eslintConfig = defineConfig([
   ]),
 ]);
 
+export const defaultOptions = [
+  { fixToUnknown: true, ignoreRestArgs: false },
+];
+
 export default eslintConfig;
