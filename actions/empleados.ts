@@ -25,13 +25,13 @@ async function obtenerUserIdDesdeJWT(): Promise<number> {
 export async function agregarEmpleado(
   formData: FormData,
 ): Promise<ActionResult> {
-  const codigo = formData.get('codigo') as string;
-  const dni = formData.get('dni') as string;
-  const nombres = formData.get('nombres') as string;
-  const apePaterno = formData.get('apePaterno') as string;
-  const apeMaterno = formData.get('apeMaterno') as string;
-  const genero = formData.get('genero') as string;
-  const correo = formData.get('correo') as string;
+  const codigo = (formData.get('codigo') as string).trim();
+  const dni = (formData.get('dni') as string).trim();
+  const nombres = (formData.get('nombres') as string).trim();
+  const apePaterno = (formData.get('apePaterno') as string).trim();
+  const apeMaterno = (formData.get('apeMaterno') as string).trim();
+  const genero = (formData.get('genero') as string).trim();
+  const correo = (formData.get('correo') as string).trim();
   const area = Number(formData.get('area'));
   const fechaNac = formData.get('fechaNac') as string;
   const fechaIngreso = formData.get('fechaIngreso') as string;
@@ -66,20 +66,26 @@ export async function agregarEmpleado(
       message: 'La fecha de fin debe ser posterior a la fecha de inicio.',
     };
 
+  const connection = await pool.getConnection();
   try {
-    const [areaRows]: any = await pool.query(
+    await connection.beginTransaction();
+
+    const [areaRows]: any = await connection.query(
       'SELECT AreaID, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ? AND activo = 1',
       [area],
     );
-    if (areaRows.length === 0)
+    if (areaRows.length === 0) {
+      await connection.rollback();
+      connection.release();
       return {
         success: false,
         message: 'El cargo seleccionado no es válido o no está activo.',
       };
+    }
 
     const salarioBase = areaRows[0].AreaSalario;
 
-    await pool.query(
+    await connection.query(
       `INSERT INTO EMPLEADO (
         EmpCodigo, AreaID, EmpDNI, EmpApellidoPaterno, EmpApellidoMaterno, 
         EmpNombres, EmpGenero, EmpCorreo, EmpFechaNacimiento, 
@@ -106,14 +112,16 @@ export async function agregarEmpleado(
       .toISOString()
       .slice(0, 19)
       .replace('T', ' ');
-    await pool.query(
+    await connection.query(
       `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'Registro de Empleado', 'Nuevo Registro', ?, ?)`,
       [codigo, FechaModificacion, idUsuarioActual],
     );
 
+    await connection.commit();
     revalidatePath('/');
     return { success: true, message: 'Empleado registrado exitosamente' };
   } catch (error: any) {
+    await connection.rollback();
     console.error('Error al guardar empleado:', error);
     if (error.code === 'ER_DUP_ENTRY')
       return {
@@ -124,6 +132,8 @@ export async function agregarEmpleado(
       success: false,
       message: 'Error al guardar el empleado en la base de datos.',
     };
+  } finally {
+    connection.release();
   }
 }
 
@@ -144,21 +154,26 @@ export async function modificarSalario(
   if (isNaN(nuevoSalario) || nuevoSalario <= 0)
     return { success: false, message: 'Salario inválido.' };
 
+  const connection = await pool.getConnection();
   try {
-    const [rows]: any = await pool.query(
+    await connection.beginTransaction();
+
+    const [rows]: any = await connection.query(
       `SELECT EmpSalario FROM EMPLEADO WHERE EmpCodigo = ?`,
       [empCodigo],
     );
     const salarioAnterior = rows[0]?.EmpSalario;
 
     if (salarioAnterior !== null && Number(salarioAnterior) === nuevoSalario) {
+      await connection.rollback();
+      connection.release();
       return {
         success: false,
         message: 'El nuevo salario debe ser diferente al actual.',
       };
     }
 
-    await pool.query(`UPDATE EMPLEADO SET EmpSalario = ? WHERE EmpCodigo = ?`, [
+    await connection.query(`UPDATE EMPLEADO SET EmpSalario = ? WHERE EmpCodigo = ?`, [
       nuevoSalario,
       empCodigo,
     ]);
@@ -167,7 +182,7 @@ export async function modificarSalario(
       .toISOString()
       .slice(0, 19)
       .replace('T', ' ');
-    await pool.query(
+    await connection.query(
       `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'EmpSalario', ?, ?, ?, ?)`,
       [
         empCodigo,
@@ -178,11 +193,15 @@ export async function modificarSalario(
       ],
     );
 
+    await connection.commit();
     revalidatePath('/');
     return { success: true, message: 'Salario modificado exitosamente' };
   } catch (error) {
+    await connection.rollback();
     console.error('Error al modificar salario:', error);
     return { success: false, message: 'Error al modificar el salario' };
+  } finally {
+    connection.release();
   }
 }
 
@@ -199,8 +218,10 @@ export async function eliminarEmpleado(
     };
   }
 
+  const connection = await pool.getConnection();
   try {
-    await pool.query(`UPDATE EMPLEADO SET activo = 0 WHERE EmpCodigo = ?`, [
+    await connection.beginTransaction();
+    await connection.query(`UPDATE EMPLEADO SET activo = 0 WHERE EmpCodigo = ?`, [
       empCodigo,
     ]);
 
@@ -208,15 +229,20 @@ export async function eliminarEmpleado(
       .toISOString()
       .slice(0, 19)
       .replace('T', ' ');
-    await pool.query(
+    await connection.query(
       `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'Eliminación Lógica', 'Activo', 'Inactivo', ?, ?)`,
       [empCodigo, FechaModificacion, idUsuarioActual],
     );
+
+    await connection.commit();
     revalidatePath('/');
     return { success: true, message: 'Empleado eliminado exitosamente' };
   } catch (error) {
+    await connection.rollback();
     console.error('Error al eliminar empleado:', error);
     return { success: false, message: 'Error al eliminar el empleado' };
+  } finally {
+    connection.release();
   }
 }
 
@@ -238,13 +264,13 @@ export async function obtenerProximoCodigo(): Promise<string> {
 export async function actualizarEmpleado(
   formData: FormData,
 ): Promise<ActionResult> {
-  const codigo = formData.get('codigo') as string;
-  const dni = formData.get('dni') as string;
-  const nombres = formData.get('nombres') as string;
-  const apePaterno = formData.get('apePaterno') as string;
-  const apeMaterno = formData.get('apeMaterno') as string;
-  const genero = formData.get('genero') as string;
-  const correo = formData.get('correo') as string;
+  const codigo = (formData.get('codigo') as string).trim();
+  const dni = (formData.get('dni') as string).trim();
+  const nombres = (formData.get('nombres') as string).trim();
+  const apePaterno = (formData.get('apePaterno') as string).trim();
+  const apeMaterno = (formData.get('apeMaterno') as string).trim();
+  const genero = (formData.get('genero') as string).trim();
+  const correo = (formData.get('correo') as string).trim();
   const areaId = Number(formData.get('area'));
   let salario = parseFloat((formData.get('salario') as string) || '0');
 
@@ -325,8 +351,10 @@ export async function actualizarEmpleado(
     };
   }
 
+  const connection = await pool.getConnection();
   try {
-    const [oldRows]: any = await pool.query(
+    await connection.beginTransaction();
+    const [oldRows]: any = await connection.query(
       `SELECT e.AreaID, e.EmpSalario, a.AreaNombre 
        FROM EMPLEADO e 
        LEFT JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID 
@@ -337,14 +365,14 @@ export async function actualizarEmpleado(
 
     let nuevoNombreArea = 'Desconocido';
     if (anterior && Number(anterior.AreaID) !== areaId) {
-      const [newAreaRows]: any = await pool.query(
+      const [newAreaRows]: any = await connection.query(
         'SELECT AreaNombre FROM AREA_TRABAJO WHERE AreaID = ?',
         [areaId],
       );
       nuevoNombreArea = newAreaRows[0]?.AreaNombre || 'Desconocido';
     }
 
-    await pool.query(
+    await connection.query(
       `UPDATE EMPLEADO SET 
         AreaID = ?, EmpDNI = ?, EmpApellidoPaterno = ?, EmpApellidoMaterno = ?, 
         EmpNombres = ?, EmpGenero = ?, EmpCorreo = ?, EmpFechaNacimiento = ?, 
@@ -373,7 +401,7 @@ export async function actualizarEmpleado(
 
     if (anterior) {
       if (Number(anterior.AreaID) !== areaId) {
-        await pool.query(
+        await connection.query(
           `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo)
            VALUES (?, 'Cambio de Cargo / Área', ?, ?, ?, ?)`,
           [
@@ -391,7 +419,7 @@ export async function actualizarEmpleado(
         const formattedOld = `S/. ${salarioAnteriorNumber.toFixed(2)}`;
         const formattedNew = `S/. ${salario.toFixed(2)}`;
 
-        await pool.query(
+        await connection.query(
           `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo)
            VALUES (?, 'Ajuste Salarial', ?, ?, ?, ?)`,
           [
@@ -405,6 +433,7 @@ export async function actualizarEmpleado(
       }
     }
 
+    await connection.commit();
     revalidatePath('/');
     revalidatePath(`/empleados/${codigo}`);
     return {
@@ -412,10 +441,13 @@ export async function actualizarEmpleado(
       message: 'Información del empleado actualizada correctamente.',
     };
   } catch (error: any) {
+    await connection.rollback();
     console.error('Error al actualizar empleado:', error);
     return {
       success: false,
       message: 'Error al actualizar los datos en la base de datos.',
     };
+  } finally {
+    connection.release();
   }
 }
