@@ -46,7 +46,7 @@ const InputField = ({
       {label}
     </label>
     <input
-      className='w-full px-3 py-2 bg-base border border-border rounded-lg text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all [&::-webkit-calendar-picker-indicator]:invert y :cursor-pointer'
+      className='w-full px-3 py-2 bg-base border border-border rounded-lg text-foreground placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all [&::-webkit-calendar-picker-indicator]:invert cursor-pointer'
       {...props}
     />
   </div>
@@ -57,11 +57,11 @@ export default function EditEmployeeForm({
   areas,
 }: EditEmployeeFormProps) {
   const router = useRouter();
-  const [selectedArea, setSelectedArea] = useState(empleado.AreaID);
+  const [selectedArea, setSelectedArea] = useState(empleado?.AreaID ?? areas[0]?.AreaID ?? '');
   const [submitting, setSubmitting] = useState(false);
 
-  const areaActual = areas.find((a) => a.AreaID === empleado.AreaID);
-  const salarioInicial = empleado.EmpSalario ?? areaActual?.AreaSalario ?? '';
+  const areaActual = areas.find((a) => a.AreaID === (empleado?.AreaID ?? areas[0]?.AreaID));
+  const salarioInicial = empleado?.EmpSalario ?? areaActual?.AreaSalario ?? '';
 
   const [salario, setSalario] = useState(salarioInicial);
 
@@ -116,7 +116,10 @@ export default function EditEmployeeForm({
     const fechaNac = new Date(fechaNacStr);
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    const edad = hoy.getFullYear() - fechaNac.getFullYear();
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const mesCumplido = hoy.getMonth() > fechaNac.getMonth() ||
+      (hoy.getMonth() === fechaNac.getMonth() && hoy.getDate() >= fechaNac.getDate());
+    if (!mesCumplido) edad--;
     if (edad < 18) {
       toast.error('El empleado debe ser mayor de edad.');
       setSubmitting(false);
@@ -295,7 +298,8 @@ export default function EditEmployeeForm({
           label='Fecha Nacimiento'
           type='date'
           name='fechaNac'
-          defaultValue={formatDate(empleado.EmpFechaNacimiento)}
+          required
+          defaultValue={formatDate(empleado?.EmpFechaNacimiento)}
         />
 
         <InputField
@@ -303,7 +307,8 @@ export default function EditEmployeeForm({
           label='Inicio Contrato'
           type='date'
           name='contratoInicio'
-          defaultValue={formatDate(empleado.EmpContratoInicio)}
+          required
+          defaultValue={formatDate(empleado?.EmpContratoInicio)}
         />
 
         <InputField
@@ -311,7 +316,8 @@ export default function EditEmployeeForm({
           label='Fin Contrato'
           type='date'
           name='contratoFin'
-          defaultValue={formatDate(empleado.EmpContratoFin)}
+          required
+          defaultValue={formatDate(empleado?.EmpContratoFin)}
         />
       </div>
 

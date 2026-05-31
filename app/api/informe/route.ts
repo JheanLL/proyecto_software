@@ -8,20 +8,23 @@ export async function GET() {
       e.EmpCodigo, e.EmpDNI, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, a.AreaNombre,
       e.EmpFechaNacimiento, e.EmpFechaIngreso,
       COALESCE(e.EmpSalario, a.AreaSalario) AS SalarioBase,
+      e.activo,
       (SELECT COUNT(*) FROM BOLETA_PAGO WHERE EmpCodigo = e.EmpCodigo) AS TotalBoletas
     FROM EMPLEADO e
     INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
-    WHERE e.activo = 1
-    ORDER BY EmpCodigo
+    ORDER BY e.activo DESC, e.EmpCodigo DESC
   `);
 
   const [boletas]: any = await pool.query(`
-    SELECT b.BoletaID, b.EmpCodigo, b.BoletaFechaBoleta, b.BoletaSalarioBase, b.BoletaGratificacion, b.BoletaTotalPago, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno
+    SELECT b.BoletaID, b.EmpCodigo, b.BoletaFechaBoleta, b.BoletaSalarioBase, b.BoletaGratificacion, b.BoletaTotalPago, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, e.activo
     FROM BOLETA_PAGO b
     JOIN EMPLEADO e ON b.EmpCodigo = e.EmpCodigo
-    WHERE e.activo = 1
-    ORDER BY e.EmpCodigo, b.BoletaFechaBoleta DESC
+    ORDER BY e.activo DESC, e.EmpCodigo DESC, b.BoletaFechaBoleta DESC
   `);
+
+  // Filtrar solo activos para KPIs del Resumen
+  const activeRows = rows.filter((r: any) => r.activo === 1);
+  const activeBoletas = boletas.filter((b: any) => b.activo === 1);
 
   const hoy = new Date();
   const workbook = new ExcelJS.Workbook();
@@ -55,9 +58,9 @@ export async function GET() {
   };
   wsResumen.getCell('A2').alignment = { horizontal: 'center' };
 
-  const totalEmpleados = rows.length;
-  const totalBoletasEmitidas = boletas.length;
-  const montoTotal = boletas.reduce(
+  const totalEmpleados = activeRows.length;
+  const totalBoletasEmitidas = activeBoletas.length;
+  const montoTotal = activeBoletas.reduce(
     (s: number, b: any) => s + Number(b.BoletaTotalPago),
     0,
   );
@@ -222,7 +225,7 @@ export async function GET() {
   );
   wsResumen.getRow(rk + 1).height = 24;
 
-  const top = [...rows]
+  const top = [...activeRows]
     .sort((a: any, b: any) => (b.TotalBoletas || 0) - (a.TotalBoletas || 0))
     .slice(0, 15);
   const maxB = top.length > 0 ? top[0].TotalBoletas || 1 : 1;
@@ -287,7 +290,7 @@ export async function GET() {
   (wsInf as any).tabColor = { argb: 'FF000080' };
 
   wsInf.mergeCells('A1:H1');
-  wsInf.getCell('A1').value = 'LISTA DE EMPLEADOS ACTIVOS';
+  wsInf.getCell('A1').value = 'LISTA DE EMPLEADOS';
   wsInf.getCell('A1').font = {
     bold: true,
     size: 16,
@@ -360,36 +363,47 @@ export async function GET() {
     const a = Math.floor(tm / 12);
     const m = tm % 12;
 
+    const isInactive = emp.activo === 0;
+    const inactiveStyle = isInactive ? { argb: 'FF999999' } : { argb: 'FF2E75B6' };
+
     wsInf.getCell(rn, 1).value = {
-      text: emp.EmpCodigo,
+      text: emp.EmpCodigo + (isInactive ? ' (Inactivo)' : ''),
       hyperlink: `#'Informe de Empleados'!A${rn}`,
     };
     wsInf.getCell(rn, 1).font = {
-      color: { argb: 'FF2E75B6' },
+      color: inactiveStyle,
       underline: true,
       size: 11,
+      italic: isInactive,
     };
     wsInf.getCell(rn, 1).alignment = { horizontal: 'left' };
 
     wsInf.getCell(rn, 2).value = emp.EmpDNI;
     wsInf.getCell(rn, 2).alignment = { horizontal: 'left' };
+    if (isInactive) wsInf.getCell(rn, 2).font = { color: { argb: 'FF999999' }, italic: true };
     wsInf.getCell(rn, 3).value =
       `${emp.EmpNombres} ${emp.EmpApellidoPaterno} ${emp.EmpApellidoMaterno}`;
+    if (isInactive) wsInf.getCell(rn, 3).font = { color: { argb: 'FF999999' }, italic: true, strike: true };
     wsInf.getCell(rn, 4).value = emp.AreaNombre;
+    if (isInactive) wsInf.getCell(rn, 4).font = { color: { argb: 'FF999999' }, italic: true };
     wsInf.getCell(rn, 5).value = ed;
     wsInf.getCell(rn, 5).alignment = { horizontal: 'center' };
+    if (isInactive) wsInf.getCell(rn, 5).font = { color: { argb: 'FF999999' }, italic: true };
     wsInf.getCell(rn, 6).value = `${a} años, ${m} meses`;
     wsInf.getCell(rn, 6).alignment = { horizontal: 'center' };
+    if (isInactive) wsInf.getCell(rn, 6).font = { color: { argb: 'FF999999' }, italic: true };
     wsInf.getCell(rn, 7).value = Number(emp.SalarioBase);
     wsInf.getCell(rn, 7).numFmt = '"S/"#,##0.00';
+    if (isInactive) wsInf.getCell(rn, 7).font = { color: { argb: 'FF999999' }, italic: true };
 
     // Total Boletas → se llenará después con el hipervínculo a la primera boleta
     wsInf.getCell(rn, 8).value = String(emp.TotalBoletas || 0);
     wsInf.getCell(rn, 8).font = {
-      color: { argb: 'FF2E75B6' },
+      color: inactiveStyle,
       underline: true,
       size: 11,
       bold: true,
+      italic: isInactive,
     };
     wsInf.getCell(rn, 8).alignment = { horizontal: 'center' };
 
@@ -400,6 +414,13 @@ export async function GET() {
         bottom: { style: 'thin', color: { argb: 'FFDDDDDD' } },
         right: { style: 'thin', color: { argb: 'FFDDDDDD' } },
       };
+      if (isInactive) {
+        wsInf.getCell(rn, c).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF5F5F5' },
+        };
+      }
     }
   });
 
@@ -485,8 +506,44 @@ export async function GET() {
   // Mapa: EmpCodigo → primera fila en Detalle de Boletas
   const primerBoletaRow: Record<string, number> = {};
 
+  // Determinar dónde empiezan las boletas de inactivos para pintar el separador
+  const primerInactivoIdx = boletas.findIndex((b: any) => b.activo === 0);
+
   boletas.forEach((b: any, idx: number) => {
     const rn = dd + idx;
+    const isInactive = b.activo === 0;
+
+    // Pintar separador visual antes del primer inactivo
+    if (primerInactivoIdx !== -1 && idx === primerInactivoIdx) {
+      wsDet.mergeCells(`A${rn}:G${rn}`);
+      wsDet.getCell(`A${rn}`).value = '── EMPLEADOS INACTIVOS / ELIMINADOS ──';
+      wsDet.getCell(`A${rn}`).font = {
+        bold: true,
+        size: 10,
+        color: { argb: 'FF888888' },
+        italic: true,
+      };
+      wsDet.getCell(`A${rn}`).alignment = { horizontal: 'center', vertical: 'middle' };
+      wsDet.getCell(`A${rn}`).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFF0F0F0' },
+      };
+      for (let c = 1; c <= 7; c++) {
+        wsDet.getCell(rn, c).border = {
+          top: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          left: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          bottom: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+          right: { style: 'thin', color: { argb: 'FFCCCCCC' } },
+        };
+      }
+      wsDet.getRow(rn).height = 26;
+      return; // Saltar esta fila (es el separador, no una boleta)
+    }
+
+    // Ajustar índice real considerando el separador
+    // Si ya pasamos el separador, el índice de boleta real es idx-1
+    const boletaIdx = primerInactivoIdx !== -1 && idx > primerInactivoIdx ? idx - 1 : idx;
 
     // Registrar primera ocurrencia de cada código
     if (!(b.EmpCodigo in primerBoletaRow)) {
@@ -495,35 +552,42 @@ export async function GET() {
 
     wsDet.getCell(rn, 1).value = `#${String(b.BoletaID).padStart(3, '0')}`;
     wsDet.getCell(rn, 1).alignment = { horizontal: 'left' };
+    if (isInactive) wsDet.getCell(rn, 1).font = { color: { argb: 'FF999999' }, italic: true };
 
     const empRow = codigoRowMap[b.EmpCodigo];
     if (empRow) {
       wsDet.getCell(rn, 2).value = {
-        text: b.EmpCodigo,
+        text: b.EmpCodigo + (isInactive ? ' (Inactivo)' : ''),
         hyperlink: `#'Informe de Empleados'!A${empRow}`,
         tooltip: `Ver empleado ${b.EmpCodigo}`,
       };
       wsDet.getCell(rn, 2).font = {
-        color: { argb: 'FF2E75B6' },
+        color: isInactive ? { argb: 'FF999999' } : { argb: 'FF2E75B6' },
         underline: true,
         size: 11,
+        italic: isInactive,
       };
     } else {
-      wsDet.getCell(rn, 2).value = b.EmpCodigo;
-      wsDet.getCell(rn, 2).font = { size: 11 };
+      wsDet.getCell(rn, 2).value = b.EmpCodigo + (isInactive ? ' (Inactivo)' : '');
+      wsDet.getCell(rn, 2).font = { size: 11, color: isInactive ? { argb: 'FF999999' } : undefined, italic: isInactive };
     }
     wsDet.getCell(rn, 2).alignment = { horizontal: 'left' };
 
     wsDet.getCell(rn, 3).value = `${b.EmpNombres} ${b.EmpApellidoPaterno}`;
+    if (isInactive) wsDet.getCell(rn, 3).font = { color: { argb: 'FF999999' }, italic: true, strike: true };
     wsDet.getCell(rn, 4).value = new Date(b.BoletaFechaBoleta);
     wsDet.getCell(rn, 4).numFmt = 'DD/MM/YYYY';
     wsDet.getCell(rn, 4).alignment = { horizontal: 'center' };
+    if (isInactive) wsDet.getCell(rn, 4).font = { color: { argb: 'FF999999' }, italic: true };
     wsDet.getCell(rn, 5).value = Number(b.BoletaSalarioBase);
     wsDet.getCell(rn, 5).numFmt = '"S/"#,##0.00';
+    if (isInactive) wsDet.getCell(rn, 5).font = { color: { argb: 'FF999999' }, italic: true };
     wsDet.getCell(rn, 6).value = Number(b.BoletaGratificacion);
     wsDet.getCell(rn, 6).numFmt = '"S/"#,##0.00';
+    if (isInactive) wsDet.getCell(rn, 6).font = { color: { argb: 'FF999999' }, italic: true };
     wsDet.getCell(rn, 7).value = Number(b.BoletaTotalPago);
     wsDet.getCell(rn, 7).numFmt = '"S/"#,##0.00';
+    if (isInactive) wsDet.getCell(rn, 7).font = { color: { argb: 'FF999999' }, italic: true };
 
     for (let c = 1; c <= 7; c++) {
       wsDet.getCell(rn, c).border = {
@@ -532,12 +596,22 @@ export async function GET() {
         bottom: { style: 'thin', color: { argb: 'FFDDDDDD' } },
         right: { style: 'thin', color: { argb: 'FFDDDDDD' } },
       };
+      if (isInactive) {
+        wsDet.getCell(rn, c).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF5F5F5' },
+        };
+      }
     }
   });
 
-  const detEnd = dd + boletas.length - 1;
+  // Calcular el fin real de la tabla considerando el separador
+  const hasSeparator = primerInactivoIdx !== -1;
+  const totalRows = boletas.length + (hasSeparator ? 1 : 0);
+  const detEnd = dd + totalRows - 1;
 
-  if (boletas.length > 0) {
+  if (totalRows > 0) {
     wsDet.autoFilter = {
       from: { row: 3, column: 1 },
       to: { row: detEnd, column: 7 },
@@ -558,6 +632,8 @@ export async function GET() {
   // CORREGIR HIPERVÍNCULOS: Total Boletas → primera boleta del empleado
   // ============================
   rows.forEach((emp: any, idx: number) => {
+    const isInactive = emp.activo === 0;
+    const inactiveStyle = isInactive ? { argb: 'FF999999' } : { argb: 'FF2E75B6' };
     const infRow = ds + idx;
     const primera = primerBoletaRow[emp.EmpCodigo];
     if (primera) {
@@ -567,10 +643,11 @@ export async function GET() {
         tooltip: `Ver boletas de ${emp.EmpCodigo} (${emp.TotalBoletas || 0} boletas)`,
       };
       wsInf.getCell(infRow, 8).font = {
-        color: { argb: 'FF2E75B6' },
+        color: inactiveStyle,
         underline: true,
         size: 11,
         bold: true,
+        italic: isInactive,
       };
       wsInf.getCell(infRow, 8).alignment = { horizontal: 'center' };
     }

@@ -246,7 +246,17 @@ export async function actualizarEmpleado(
   const genero = formData.get('genero') as string;
   const correo = formData.get('correo') as string;
   const areaId = Number(formData.get('area'));
-  const salario = parseFloat((formData.get('salario') as string) || '0');
+  let salario = parseFloat((formData.get('salario') as string) || '0');
+
+  // Si no viene salario (caso nuevo empleado), buscamos el salario del área
+  if (isNaN(salario) || salario === 0) {
+    const [areaRows]: any = await pool.query(
+      'SELECT AreaSalario FROM AREA_TRABAJO WHERE AreaID = ?',
+      [areaId],
+    );
+    salario = areaRows[0]?.AreaSalario || 0;
+  }
+
   const fechaNac = formData.get('fechaNac') as string;
   const contratoInicio = formData.get('contratoInicio') as string;
   const contratoFin = formData.get('contratoFin') as string;

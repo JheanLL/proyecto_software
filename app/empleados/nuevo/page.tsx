@@ -5,7 +5,7 @@ import { ArrowLeft, UserPlus } from 'lucide-react';
 
 export default async function NuevoEmpleadoPage() {
   const [rows] = await pool.query(
-    'SELECT AreaID, AreaNombre FROM AREA_TRABAJO WHERE activo = 1',
+    'SELECT AreaID, AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE activo = 1',
   );
   const areas = rows as any[];
 
