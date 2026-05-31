@@ -42,3 +42,6 @@ next-env.d.ts
 
 # ignore setup
 setup.txt
+
+# ignore auditories
+AUDITORIA_TECNICA.md
