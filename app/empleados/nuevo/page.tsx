@@ -7,7 +7,7 @@ export default async function NuevoEmpleadoPage() {
   const [rows] = await pool.query(
     "SELECT AreaID, AreaNombre FROM AREA_TRABAJO WHERE activo = 1",
   );
-  const areas = rows as any[];
+  const areas = rows as unknown[];
 
   return (
     <main className="min-h-screen p-4 md:p-6 lg:p-8 max-w-5xl mx-auto animate-fade-in">

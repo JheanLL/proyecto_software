@@ -19,7 +19,7 @@ export default async function AuditoriaPage() {
     ORDER BY h.HMHistorialID DESC
   `);
 
-  const registros = rows as any[];
+  const registros = rows as unknown[];
 
   const getFriendlyFieldName = (campo: string) => {
     if (campo === "EmpSalario") return "Ajuste Salarial";

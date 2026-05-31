@@ -12,7 +12,7 @@ export async function GET(
   const gratificacionParam = parseFloat(searchParams.get("gratificacion") || "0");
 
   // Traemos también la fecha de ingreso del empleado
-  const [rows]: any = await pool.query(
+  const [rows]: unknown = await pool.query(
     `SELECT e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, e.EmpDNI, e.EmpFechaIngreso, a.AreaNombre 
      FROM EMPLEADO e 
      LEFT JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID 
@@ -35,7 +35,7 @@ export async function GET(
 
   worksheet.mergeCells("A1:B1");
   worksheet.getCell("A1").value = "BOLETA DE PAGO DE HABERES";
-  worksheet.getCell("A1").style = titleStyle as any;
+  worksheet.getCell("A1").style = titleStyle as unknown;
 
   worksheet.getCell("A2").value = `Fecha: ${new Date().toLocaleDateString()}`;
   
@@ -45,7 +45,7 @@ export async function GET(
   worksheet.addRow([]);
 
   const tableHeader = worksheet.addRow(["Concepto", "Monto (S/.)"]);
-  tableHeader.eachCell((cell) => cell.style = headerStyle as any);
+  tableHeader.eachCell((cell) => cell.style = headerStyle as unknown);
 
   worksheet.addRow(["Salario Base", total - gratificacion]);
   if (gratificacion > 0) worksheet.addRow(["Gratificación", gratificacion]);

@@ -15,7 +15,7 @@ export async function loginAction(formData: FormData) {
     const SECRET_KEY = new TextEncoder().encode(secret);
 
     // 2. Buscar al usuario
-    const [rows]: any = await pool.query(
+    const [rows]: unknown = await pool.query(
       "SELECT UserCodigo, UserNombre, UserPassword, RolID FROM USUARIO WHERE UserCorreo = ?",
       [email],
     );

@@ -74,7 +74,7 @@ export async function modificarCargo(formData: FormData): Promise<ActionResult> 
   try {
     await connection.beginTransaction();
 
-    const [old]: any = await connection.query("SELECT AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ?", [areaID]);
+    const [old]: unknown = await connection.query("SELECT AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ?", [areaID]);
     const valorAnterior = old[0] ? `${old[0].AreaNombre} - S/. ${old[0].AreaSalario}` : "Desconocido";
 
     await connection.query(`UPDATE AREA_TRABAJO SET AreaNombre = ?, AreaSalario = ? WHERE AreaID = ?`, [nuevoNombre, nuevoSalario, areaID]);
@@ -107,7 +107,7 @@ export async function eliminarCargo(areaID: number): Promise<ActionResult> {
   }
 
   try {
-    const [empleados]: any = await pool.query("SELECT COUNT(*) as count FROM EMPLEADO WHERE AreaID = ? AND activo = 1", [areaID]);
+    const [empleados]: unknown = await pool.query("SELECT COUNT(*) as count FROM EMPLEADO WHERE AreaID = ? AND activo = 1", [areaID]);
     if (empleados[0].count > 0) return { success: false, message: "No se puede eliminar un cargo que tiene empleados activos asignados." };
 
     await pool.query(`UPDATE AREA_TRABAJO SET activo = 0 WHERE AreaID = ?`, [areaID]);

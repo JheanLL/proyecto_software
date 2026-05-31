@@ -17,14 +17,14 @@ export default async function PerfilEmpleadoPage({
     "SELECT * FROM EMPLEADO WHERE EmpCodigo = ? AND activo = 1",
     [codigo],
   );
-  const empleados = empRows as any[];
+  const empleados = empRows as unknown[];
   if (empleados.length === 0) return redirect("/");
   const empleado = empleados[0];
 
   const [areaRows] = await pool.query(
     "SELECT AreaID, AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE activo = 1",
   );
-  const areas = areaRows as any[];
+  const areas = areaRows as unknown[];
 
   const [historialRows] = await pool.query(
     `SELECT h.*, u.UserNombre 
@@ -34,7 +34,7 @@ export default async function PerfilEmpleadoPage({
    ORDER BY h.HMFechaModificacion DESC, h.HMHistorialID DESC`,
     [codigo],
   );
-  const historial = historialRows as any[];
+  const historial = historialRows as unknown[];
 
   return (
     <main className="min-h-screen p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in">

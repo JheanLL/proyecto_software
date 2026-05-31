@@ -1,6 +1,6 @@
 import pool from "@/lib/db";
 import Link from "next/link";
-import { calcularGratificacion } from "@/actions/boletas";
+import { calcularGratificacion } from "@/lib/gratificacion";
 import EmpleadosTable from "@/components/ui/EmpleadosTable";
 import {
   Plus,
@@ -26,11 +26,10 @@ export default async function Page() {
       ORDER BY CAST(SUBSTRING(e.EmpCodigo, 4) AS UNSIGNED) DESC  
     `);
 
-    const empleados = rows as any[];
+    const empleados = rows as unknown[];
 
-    const empleadosConCalculos = await Promise.all(
-      empleados.map(async (emp) => {
-        const gratificacion = await calcularGratificacion(emp.EmpCodigo);
+    const empleadosConCalculos = empleados.map((emp) => {
+        const gratificacion = calcularGratificacion(emp.EmpFechaIngreso);
         const fechaIngreso = new Date(emp.EmpFechaIngreso);
         const hoy = new Date();
 
@@ -55,8 +54,7 @@ export default async function Page() {
 
         const antiguedadExacta = `${anios} años, ${meses} meses, ${dias} días`;
         return { ...emp, antiguedadExacta, gratificacion };
-      }),
-    );
+      });
 
     return (
       <main className="min-h-screen p-4 md:p-6 lg:p-8">

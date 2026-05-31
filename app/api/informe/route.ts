@@ -3,7 +3,7 @@ import ExcelJS from "exceljs";
 import pool from "@/lib/db";
 
 export async function GET() {
-  const [rows]: any = await pool.query(`
+  const [rows]: unknown = await pool.query(`
     SELECT 
       e.EmpCodigo, e.EmpDNI, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, a.AreaNombre,
       e.EmpFechaNacimiento, e.EmpFechaIngreso,
@@ -15,7 +15,7 @@ export async function GET() {
     ORDER BY EmpCodigo
   `);
 
-  const [boletas]: any = await pool.query(`
+  const [boletas]: unknown = await pool.query(`
     SELECT b.BoletaID, b.EmpCodigo, b.BoletaFechaBoleta, b.BoletaSalarioBase, b.BoletaGratificacion, b.BoletaTotalPago, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno
     FROM BOLETA_PAGO b
     JOIN EMPLEADO e ON b.EmpCodigo = e.EmpCodigo
@@ -30,7 +30,7 @@ export async function GET() {
   // HOJA 1: RESUMEN
   // ============================
   const wsResumen = workbook.addWorksheet("Resumen");
-  (wsResumen as any).tabColor = { argb: "FF2E75B6" };
+  (wsResumen as unknown).tabColor = { argb: "FF2E75B6" };
 
   wsResumen.mergeCells("A1:F1");
   wsResumen.getCell("A1").value = "INFORME GENERAL DE OPERACIONES Y RRHH";
@@ -45,7 +45,7 @@ export async function GET() {
 
   const totalEmpleados = rows.length;
   const totalBoletasEmitidas = boletas.length;
-  const montoTotal = boletas.reduce((s: number, b: any) => s + Number(b.BoletaTotalPago), 0);
+  const montoTotal = boletas.reduce((s: number, b: unknown) => s + Number(b.BoletaTotalPago), 0);
   const promedio = totalEmpleados > 0 ? montoTotal / totalEmpleados : 0;
 
   // KPI Cards
@@ -115,10 +115,10 @@ export async function GET() {
   });
   wsResumen.getRow(rk + 1).height = 24;
 
-  const top = [...rows].sort((a: any, b: any) => (b.TotalBoletas || 0) - (a.TotalBoletas || 0)).slice(0, 15);
+  const top = [...rows].sort((a: unknown, b: unknown) => (b.TotalBoletas || 0) - (a.TotalBoletas || 0)).slice(0, 15);
   const maxB = top.length > 0 ? (top[0].TotalBoletas || 1) : 1;
 
-  top.forEach((emp: any, i: number) => {
+  top.forEach((emp: unknown, i: number) => {
     const nr = rk + 2 + i;
     const tb = emp.TotalBoletas || 0;
     const bl = Math.round((tb / maxB) * 20);
@@ -148,7 +148,7 @@ export async function GET() {
   // HOJA 2: INFORME DE EMPLEADOS
   // ============================
   const wsInf = workbook.addWorksheet("Informe de Empleados");
-  (wsInf as any).tabColor = { argb: "FF000080" };
+  (wsInf as unknown).tabColor = { argb: "FF000080" };
 
   wsInf.mergeCells("A1:H1");
   wsInf.getCell("A1").value = "LISTA DE EMPLEADOS ACTIVOS";
@@ -172,7 +172,7 @@ export async function GET() {
   const ds = 4;
   const codigoRowMap: Record<string, number> = {};
 
-  rows.forEach((emp: any, idx: number) => {
+  rows.forEach((emp: unknown, idx: number) => {
     const rn = ds + idx;
     codigoRowMap[emp.EmpCodigo] = rn;
 
@@ -218,7 +218,7 @@ export async function GET() {
   // HOJA 3: DETALLE DE BOLETAS
   // ============================
   const wsDet = workbook.addWorksheet("Detalle de Boletas");
-  (wsDet as any).tabColor = { argb: "FF00B050" };
+  (wsDet as unknown).tabColor = { argb: "FF00B050" };
 
   wsDet.mergeCells("A1:G1");
   wsDet.getCell("A1").value = "DETALLE DE BOLETAS DE PAGO";
@@ -243,7 +243,7 @@ export async function GET() {
   // Mapa: EmpCodigo → primera fila en Detalle de Boletas
   const primerBoletaRow: Record<string, number> = {};
 
-  boletas.forEach((b: any, idx: number) => {
+  boletas.forEach((b: unknown, idx: number) => {
     const rn = dd + idx;
 
     // Registrar primera ocurrencia de cada código
@@ -295,7 +295,7 @@ export async function GET() {
   // ============================
   // CORREGIR HIPERVÍNCULOS: Total Boletas → primera boleta del empleado
   // ============================
-  rows.forEach((emp: any, idx: number) => {
+  rows.forEach((emp: unknown, idx: number) => {
     const infRow = ds + idx;
     const primera = primerBoletaRow[emp.EmpCodigo];
     if (primera) {

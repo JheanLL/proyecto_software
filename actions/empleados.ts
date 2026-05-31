@@ -64,7 +64,7 @@ export async function agregarEmpleado(
     };
 
   try {
-    const [areaRows]: any = await pool.query(
+    const [areaRows]: unknown = await pool.query(
       "SELECT AreaID, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ? AND activo = 1",
       [area],
     );
@@ -107,7 +107,7 @@ export async function agregarEmpleado(
 
     revalidatePath("/");
     return { success: true, message: "Empleado registrado exitosamente" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error al guardar empleado:", error);
     if (error.code === "ER_DUP_ENTRY")
       return {
@@ -136,7 +136,7 @@ export async function modificarSalario(
     return { success: false, message: "Salario inválido." };
 
   try {
-    const [rows]: any = await pool.query(
+    const [rows]: unknown = await pool.query(
       `SELECT EmpSalario FROM EMPLEADO WHERE EmpCodigo = ?`,
       [empCodigo],
     );
@@ -204,7 +204,7 @@ export async function eliminarEmpleado(
 
 export async function obtenerProximoCodigo(): Promise<string> {
   try {
-    const [rows]: any = await pool.query(
+    const [rows]: unknown = await pool.query(
       "SELECT MAX(CAST(SUBSTRING(EmpCodigo, 4) AS UNSIGNED)) AS maxNum FROM EMPLEADO",
     );
     const maxNum = rows[0]?.maxNum;
@@ -295,7 +295,7 @@ export async function actualizarEmpleado(
   }
 
   try {
-    const [oldRows]: any = await pool.query(
+    const [oldRows]: unknown = await pool.query(
       `SELECT e.AreaID, e.EmpSalario, a.AreaNombre 
        FROM EMPLEADO e 
        LEFT JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID 
@@ -306,7 +306,7 @@ export async function actualizarEmpleado(
 
     let nuevoNombreArea = "Desconocido";
     if (anterior && Number(anterior.AreaID) !== areaId) {
-      const [newAreaRows]: any = await pool.query(
+      const [newAreaRows]: unknown = await pool.query(
         "SELECT AreaNombre FROM AREA_TRABAJO WHERE AreaID = ?",
         [areaId],
       );
@@ -371,7 +371,7 @@ export async function actualizarEmpleado(
       success: true,
       message: "Información del empleado actualizada correctamente.",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error al actualizar empleado:", error);
     return {
       success: false,
