@@ -3,6 +3,7 @@
 import pool from '@/lib/db';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
+import bcrypt from 'bcryptjs';
 
 export async function loginAction(formData: FormData) {
   const email = formData.get('email') as string;
@@ -23,7 +24,12 @@ export async function loginAction(formData: FormData) {
     const user = rows[0];
 
     // 3. Validar existencia y contraseña
-    if (!user || password !== user.UserPassword) {
+    if (!user) {
+      return { success: false, message: 'Correo o contraseña incorrectos' };
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.UserPassword);
+    if (!isPasswordValid) {
       return { success: false, message: 'Correo o contraseña incorrectos' };
     }
 
