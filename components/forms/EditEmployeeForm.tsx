@@ -27,7 +27,7 @@ interface Area {
 }
 
 interface EditEmployeeFormProps {
-  empleado: any;
+  empleado: unknown;
   areas: Area[];
 }
 
@@ -143,7 +143,7 @@ export default function EditEmployeeForm({
     }
   };
 
-  const formatDate = (dateString: any) => {
+  const formatDate = (dateString: unknown) => {
     if (!dateString) return "";
     return new Date(dateString).toISOString().split("T")[0];
   };
@@ -155,7 +155,7 @@ export default function EditEmployeeForm({
   }: {
     icon: React.ElementType;
     label: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }) => (
     <div>
       <label className="flex items-center gap-1.5 text-xs font-semibold text-muted mb-1.5">

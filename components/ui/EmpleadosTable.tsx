@@ -21,13 +21,13 @@ import {
 export default function EmpleadosTable({
   empleadosConCalculos,
 }: {
-  empleadosConCalculos: any[];
+  empleadosConCalculos: unknown[];
 }) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedEmp, setSelectedEmp] = useState<any>(null);
-  const [deletingEmp, setDeletingEmp] = useState<any>(null);
+  const [selectedEmp, setSelectedEmp] = useState<unknown>(null);
+  const [deletingEmp, setDeletingEmp] = useState<unknown>(null);
 
   const handleDelete = async () => {
     if (!deletingEmp) return;
