@@ -3,11 +3,13 @@ import Link from 'next/link';
 import NewEmployeeForm from '@/components/forms/NewEmployeeForm';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 
+import { mapArea } from '@/lib/mappers';
+
 export default async function NuevoEmpleadoPage() {
   const [rows] = await pool.query(
-    'SELECT AreaID, AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE activo = 1',
+    'SELECT AreaID, AreaNombre, AreaSalario, AreaActivo FROM AREA_TRABAJO WHERE AreaActivo = 1',
   );
-  const areas = rows as any[];
+  const areas = (rows as any[]).map(mapArea);
 
   return (
     <main className='min-h-screen p-4 md:p-6 lg:p-8 max-w-5xl mx-auto animate-fade-in'>

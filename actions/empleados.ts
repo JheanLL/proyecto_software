@@ -71,7 +71,7 @@ export async function agregarEmpleado(
     await connection.beginTransaction();
 
     const [areaRows]: any = await connection.query(
-      'SELECT AreaID, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ? AND activo = 1',
+      'SELECT AreaID, AreaSalario FROM AREA_TRABAJO WHERE AreaID = ? AND AreaActivo = 1',
       [area],
     );
     if (areaRows.length === 0) {
@@ -221,7 +221,7 @@ export async function eliminarEmpleado(
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    await connection.query(`UPDATE EMPLEADO SET activo = 0 WHERE EmpCodigo = ?`, [
+    await connection.query(`UPDATE EMPLEADO SET EmpActivo = 0 WHERE EmpCodigo = ?`, [
       empCodigo,
     ]);
 

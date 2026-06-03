@@ -8,23 +8,23 @@ export async function GET() {
       e.EmpCodigo, e.EmpDNI, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, a.AreaNombre,
       e.EmpFechaNacimiento, e.EmpFechaIngreso,
       COALESCE(e.EmpSalario, a.AreaSalario) AS SalarioBase,
-      e.activo,
+      e.EmpActivo,
       (SELECT COUNT(*) FROM BOLETA_PAGO WHERE EmpCodigo = e.EmpCodigo) AS TotalBoletas
     FROM EMPLEADO e
     INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
-    ORDER BY e.activo DESC, e.EmpCodigo DESC
+    ORDER BY e.EmpActivo DESC, e.EmpCodigo DESC
   `);
 
   const [boletas]: any = await pool.query(`
-    SELECT b.BoletaID, b.EmpCodigo, b.BoletaFechaBoleta, b.BoletaSalarioBase, b.BoletaGratificacion, b.BoletaTotalPago, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, e.activo
+    SELECT b.BoletaID, b.EmpCodigo, b.BoletaFecha, b.BoletaSalarioBase, b.BoletaGratificacion, b.BoletaTotalPago, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, e.EmpActivo
     FROM BOLETA_PAGO b
     JOIN EMPLEADO e ON b.EmpCodigo = e.EmpCodigo
-    ORDER BY e.activo DESC, e.EmpCodigo DESC, b.BoletaFechaBoleta DESC
+    ORDER BY e.EmpActivo DESC, e.EmpCodigo DESC, b.BoletaFecha DESC
   `);
 
   // Filtrar solo activos para KPIs del Resumen
-  const activeRows = rows.filter((r: any) => r.activo === 1);
-  const activeBoletas = boletas.filter((b: any) => b.activo === 1);
+  const activeRows = rows.filter((r: any) => r.EmpActivo === 1);
+  const activeBoletas = boletas.filter((b: any) => b.EmpActivo === 1);
 
   const hoy = new Date();
   const workbook = new ExcelJS.Workbook();
@@ -363,7 +363,7 @@ export async function GET() {
     const a = Math.floor(tm / 12);
     const m = tm % 12;
 
-    const isInactive = emp.activo === 0;
+    const isInactive = emp.EmpActivo === 0;
     const inactiveStyle = isInactive ? { argb: 'FF999999' } : { argb: 'FF2E75B6' };
 
     wsInf.getCell(rn, 1).value = {
@@ -507,11 +507,11 @@ export async function GET() {
   const primerBoletaRow: Record<string, number> = {};
 
   // Determinar dónde empiezan las boletas de inactivos para pintar el separador
-  const primerInactivoIdx = boletas.findIndex((b: any) => b.activo === 0);
+  const primerInactivoIdx = boletas.findIndex((b: any) => b.EmpActivo === 0);
 
   boletas.forEach((b: any, idx: number) => {
     const rn = dd + idx;
-    const isInactive = b.activo === 0;
+    const isInactive = b.EmpActivo === 0;
 
     // Pintar separador visual antes del primer inactivo
     if (primerInactivoIdx !== -1 && idx === primerInactivoIdx) {
@@ -575,7 +575,7 @@ export async function GET() {
 
     wsDet.getCell(rn, 3).value = `${b.EmpNombres} ${b.EmpApellidoPaterno}`;
     if (isInactive) wsDet.getCell(rn, 3).font = { color: { argb: 'FF999999' }, italic: true, strike: true };
-    wsDet.getCell(rn, 4).value = new Date(b.BoletaFechaBoleta);
+    wsDet.getCell(rn, 4).value = new Date(b.BoletaFecha);
     wsDet.getCell(rn, 4).numFmt = 'DD/MM/YYYY';
     wsDet.getCell(rn, 4).alignment = { horizontal: 'center' };
     if (isInactive) wsDet.getCell(rn, 4).font = { color: { argb: 'FF999999' }, italic: true };
@@ -632,7 +632,7 @@ export async function GET() {
   // CORREGIR HIPERVÍNCULOS: Total Boletas → primera boleta del empleado
   // ============================
   rows.forEach((emp: any, idx: number) => {
-    const isInactive = emp.activo === 0;
+    const isInactive = emp.EmpActivo === 0;
     const inactiveStyle = isInactive ? { argb: 'FF999999' } : { argb: 'FF2E75B6' };
     const infRow = ds + idx;
     const primera = primerBoletaRow[emp.EmpCodigo];

@@ -13,20 +13,26 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+import { mapEmpleado } from '@/lib/mappers';
+
 async function getEmpleados() {
   const [rows] = await pool.query(`
     SELECT 
-      e.EmpCodigo, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, a.AreaNombre,
+      e.EmpCodigo, e.EmpNombres, e.EmpApellidoPaterno, e.EmpApellidoMaterno, e.EmpDNI, e.EmpFechaNacimiento, e.EmpFechaIngreso, e.AreaID, e.EmpSalario, e.EmpGenero, e.EmpCorreo, e.EmpContratoInicio, e.EmpContratoFin, e.EmpActivo, a.AreaNombre,
       TIMESTAMPDIFF(YEAR, e.EmpFechaNacimiento, CURDATE()) AS EdadActual,
-      e.EmpFechaIngreso,
       COALESCE(e.EmpSalario, a.AreaSalario) AS SalarioFinal
     FROM EMPLEADO e
     INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
-    WHERE e.activo = 1
+    WHERE e.EmpActivo = 1
     ORDER BY CAST(SUBSTRING(e.EmpCodigo, 4) AS UNSIGNED) DESC  
   `);
 
-  return rows as any[];
+  return (rows as any[]).map((row) => ({
+    ...mapEmpleado(row),
+    AreaNombre: row.AreaNombre,
+    EdadActual: row.EdadActual,
+    SalarioFinal: row.SalarioFinal,
+  }));
 }
 
 function calcularAntiguedad(fechaIngreso: string) {

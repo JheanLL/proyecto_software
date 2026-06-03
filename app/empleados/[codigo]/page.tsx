@@ -2,6 +2,7 @@ import pool from '@/lib/db';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import EditEmployeeForm from '@/components/forms/EditEmployeeForm';
+import { mapEmpleado, mapArea, mapHistorial } from '@/lib/mappers';
 import {
   ArrowLeft,
   User,
@@ -21,27 +22,30 @@ export default async function PerfilEmpleadoPage({
   const { codigo } = await params;
 
   const [empRows] = await pool.query(
-    'SELECT * FROM EMPLEADO WHERE EmpCodigo = ? AND activo = 1',
+    'SELECT * FROM EMPLEADO WHERE EmpCodigo = ? AND EmpActivo = 1',
     [codigo],
   );
-  const empleados = empRows as any[];
+  const empleados = (empRows as any[]).map(mapEmpleado);
   if (empleados.length === 0) return redirect('/');
   const empleado = empleados[0];
 
   const [areaRows] = await pool.query(
-    'SELECT AreaID, AreaNombre, AreaSalario FROM AREA_TRABAJO WHERE activo = 1',
+    'SELECT AreaID, AreaNombre, AreaSalario, AreaActivo FROM AREA_TRABAJO WHERE AreaActivo = 1',
   );
-  const areas = areaRows as any[];
+  const areas = (areaRows as any[]).map(mapArea);
 
   const [historialRows] = await pool.query(
     `SELECT h.*, u.UserNombre 
    FROM HISTORIAL_MODIFICACIONES h
    LEFT JOIN USUARIO u ON h.HMUserCodigo = u.UserCodigo
    WHERE h.HMEmpCodigo = ? AND h.HMCampoModificado IN ('Ajuste Salarial', 'Cambio de Cargo / Área')
-   ORDER BY h.HMFechaModificacion DESC, h.HMHistorialID DESC`,
+   ORDER BY h.HMFechaModificacion DESC, h.HMID DESC`,
     [codigo],
   );
-  const historial = historialRows as any[];
+  const historial = (historialRows as any[]).map((row) => ({
+    ...mapHistorial(row),
+    UserNombre: row.UserNombre,
+  }));
 
   return (
     <main className='min-h-screen p-4 md:p-6 lg:p-8 max-w-7xl mx-auto animate-fade-in'>
@@ -98,7 +102,7 @@ export default async function PerfilEmpleadoPage({
                   log.HMCampoModificado.toLowerCase().includes('salario');
 
                 return (
-                  <li key={log.HMHistorialID}>
+                  <li key={log.HMID}>
                     <div className='relative pb-8'>
                       {logIdx !== historial.length - 1 ? (
                         <span

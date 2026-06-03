@@ -2,7 +2,7 @@ export interface Area {
   AreaID: number;
   AreaNombre: string;
   AreaSalario: number;
-  activo: boolean;
+  AreaActivo: boolean;
 }
 
 export interface Empleado {
@@ -19,20 +19,20 @@ export interface Empleado {
   EmpContratoInicio: string;
   EmpContratoFin: string;
   EmpSalario: number | null;
-  activo: boolean;
+  EmpActivo: boolean;
 }
 
 export interface BoletaPago {
   BoletaID: number;
   EmpCodigo: string;
-  BoletaFechaBoleta: string;
+  BoletaFecha: string;
   BoletaSalarioBase: number;
   BoletaGratificacion: number;
   BoletaTotalPago: number;
 }
 
 export interface HistorialModificacion {
-  HMHistorialID: number;
+  HMID: number;
   HMEmpCodigo: string;
   HMCampoModificado: string;
   HMValorAnterior: string | null;

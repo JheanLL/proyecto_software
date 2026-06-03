@@ -2,12 +2,15 @@ import pool from '@/lib/db';
 import Link from 'next/link';
 import { ArrowLeft, Shield, Clock, User, Hash, FileSearch } from 'lucide-react';
 
+import { mapHistorial } from '@/lib/mappers';
+import { HistorialModificacion } from '@/types';
+
 export const revalidate = 0;
 
 export default async function AuditoriaPage() {
   const [rows] = await pool.query(`
     SELECT 
-      h.HMHistorialID,
+      h.HMID,
       h.HMFechaModificacion,
       h.HMCampoModificado,
       h.HMValorAnterior,
@@ -16,10 +19,13 @@ export default async function AuditoriaPage() {
       u.UserNombre
     FROM HISTORIAL_MODIFICACIONES h
     LEFT JOIN USUARIO u ON h.HMUserCodigo = u.UserCodigo
-    ORDER BY h.HMHistorialID DESC
+    ORDER BY h.HMID DESC
   `);
 
-  const registros = rows as any[];
+  const registros = (rows as any[]).map((row) => ({
+    ...mapHistorial(row),
+    UserNombre: row.UserNombre,
+  }));
 
   const getFriendlyFieldName = (campo: string) => {
     if (campo === 'EmpSalario') return 'Ajuste Salarial';
@@ -117,10 +123,10 @@ export default async function AuditoriaPage() {
 
                 return (
                   <tr
-                    key={reg.HMHistorialID}
+                    key={reg.HMID}
                     className='hover:bg-surface-hover/40 transition-colors'>
                     <td className='px-6 py-4 font-mono text-muted text-xs'>
-                      #{String(reg.HMHistorialID).padStart(4, '0')}
+                      #{String(reg.HMID).padStart(4, '0')}
                     </td>
 
                     <td className='px-6 py-4 whitespace-nowrap text-foreground tabular-nums'>

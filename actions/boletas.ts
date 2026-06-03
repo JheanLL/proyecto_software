@@ -19,7 +19,7 @@ export async function generarBoletasMes(): Promise<ActionResult> {
     await connection.beginTransaction();
 
     const [existentes]: any = await connection.query(
-      "SELECT COUNT(*) as count FROM BOLETA_PAGO WHERE DATE_FORMAT(BoletaFechaBoleta, '%Y-%m') = ?",
+      "SELECT COUNT(*) as count FROM BOLETA_PAGO WHERE DATE_FORMAT(BoletaFecha, '%Y-%m') = ?",
       [`${yyyy}-${mm}`],
     );
     if (existentes[0].count > 0)
@@ -29,7 +29,7 @@ export async function generarBoletasMes(): Promise<ActionResult> {
       };
 
     const [empleados]: any = await connection.query(
-      `SELECT e.EmpCodigo, e.EmpFechaIngreso, COALESCE(e.EmpSalario, a.AreaSalario) AS Salario FROM EMPLEADO e INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID WHERE e.activo = 1`,
+      `SELECT e.EmpCodigo, e.EmpFechaIngreso, COALESCE(e.EmpSalario, a.AreaSalario) AS Salario FROM EMPLEADO e INNER JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID WHERE e.EmpActivo = 1`,
     );
     if (empleados.length === 0)
       return {
@@ -42,7 +42,7 @@ export async function generarBoletasMes(): Promise<ActionResult> {
       const gratificacion = calcularGrati(emp.EmpFechaIngreso);
       const totalPago = salarioBase + gratificacion;
       await connection.query(
-        `INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFecha, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, ?, ?, ?, ?)`,
         [emp.EmpCodigo, fechaBoleta, salarioBase, gratificacion, totalPago],
       );
     }
@@ -73,7 +73,7 @@ export async function registrarBoleta(
 ): Promise<ActionResult> {
   try {
     const [existing]: any = await pool.query(
-      `SELECT BoletaID FROM BOLETA_PAGO WHERE EmpCodigo = ? AND MONTH(BoletaFechaBoleta) = MONTH(CURDATE()) AND YEAR(BoletaFechaBoleta) = YEAR(CURDATE())`,
+      `SELECT BoletaID FROM BOLETA_PAGO WHERE EmpCodigo = ? AND MONTH(BoletaFecha) = MONTH(CURDATE()) AND YEAR(BoletaFecha) = YEAR(CURDATE())`,
       [empCodigo],
     );
 
@@ -84,7 +84,7 @@ export async function registrarBoleta(
       );
     } else {
       await pool.query(
-        `INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFechaBoleta, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, CURDATE(), ?, ?, ?)`,
+        `INSERT INTO BOLETA_PAGO (EmpCodigo, BoletaFecha, BoletaSalarioBase, BoletaGratificacion, BoletaTotalPago) VALUES (?, CURDATE(), ?, ?, ?)`,
         [empCodigo, salarioBase, gratificacion, totalPago],
       );
     }

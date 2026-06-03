@@ -149,7 +149,7 @@ export async function eliminarCargo(areaID: number): Promise<ActionResult> {
 
   try {
     const [empleados]: any = await pool.query(
-      'SELECT COUNT(*) as count FROM EMPLEADO WHERE AreaID = ? AND activo = 1',
+      'SELECT COUNT(*) as count FROM EMPLEADO WHERE AreaID = ? AND EmpActivo = 1',
       [areaID],
     );
     if (empleados[0].count > 0)
@@ -159,7 +159,7 @@ export async function eliminarCargo(areaID: number): Promise<ActionResult> {
           'No se puede eliminar un cargo que tiene empleados activos asignados.',
       };
 
-    await pool.query(`UPDATE AREA_TRABAJO SET activo = 0 WHERE AreaID = ?`, [
+    await pool.query(`UPDATE AREA_TRABAJO SET AreaActivo = 0 WHERE AreaID = ?`, [
       areaID,
     ]);
 
