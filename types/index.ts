@@ -33,12 +33,12 @@ export interface BoletaPago {
 
 export interface HistorialModificacion {
   HMID: number;
-  HMEmpCodigo: string;
+  EmpCodigo: string;
   HMCampoModificado: string;
   HMValorAnterior: string | null;
   HMValorNuevo: string;
   HMFechaModificacion: string;
-  HMUserCodigo: number;
+  UserCodigo: number;
 }
 
 export interface Rol {

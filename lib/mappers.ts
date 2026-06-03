@@ -37,12 +37,12 @@ export const mapBoletaPago = (row: any): BoletaPago => ({
 
 export const mapHistorial = (row: any): HistorialModificacion => ({
   HMID: Number(row.HMID),
-  HMEmpCodigo: String(row.HMEmpCodigo),
+  EmpCodigo: String(row.EmpCodigo),
   HMCampoModificado: String(row.HMCampoModificado),
   HMValorAnterior: row.HMValorAnterior ? String(row.HMValorAnterior) : null,
   HMValorNuevo: String(row.HMValorNuevo),
   HMFechaModificacion: row.HMFechaModificacion ? new Date(row.HMFechaModificacion).toISOString() : '',
-  HMUserCodigo: Number(row.HMUserCodigo),
+  UserCodigo: Number(row.UserCodigo),
 });
 
 export const mapRol = (row: any): Rol => ({

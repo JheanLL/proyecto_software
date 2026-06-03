@@ -113,7 +113,7 @@ export async function agregarEmpleado(
       .slice(0, 19)
       .replace('T', ' ');
     await connection.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'Registro de Empleado', 'Nuevo Registro', ?, ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, HMCampoModificado, HMValorNuevo, HMFechaModificacion, UserCodigo) VALUES (?, 'Registro de Empleado', 'Nuevo Registro', ?, ?)`,
       [codigo, FechaModificacion, idUsuarioActual],
     );
 
@@ -183,7 +183,7 @@ export async function modificarSalario(
       .slice(0, 19)
       .replace('T', ' ');
     await connection.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'EmpSalario', ?, ?, ?, ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, UserCodigo) VALUES (?, 'EmpSalario', ?, ?, ?, ?)`,
       [
         empCodigo,
         String(salarioAnterior || 'Sueldo Base'),
@@ -230,7 +230,7 @@ export async function eliminarEmpleado(
       .slice(0, 19)
       .replace('T', ' ');
     await connection.query(
-      `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo) VALUES (?, 'Eliminación Lógica', 'Activo', 'Inactivo', ?, ?)`,
+      `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, UserCodigo) VALUES (?, 'Eliminación Lógica', 'Activo', 'Inactivo', ?, ?)`,
       [empCodigo, FechaModificacion, idUsuarioActual],
     );
 
@@ -402,7 +402,7 @@ export async function actualizarEmpleado(
     if (anterior) {
       if (Number(anterior.AreaID) !== areaId) {
         await connection.query(
-          `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo)
+          `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, UserCodigo)
            VALUES (?, 'Cambio de Cargo / Área', ?, ?, ?, ?)`,
           [
             codigo,
@@ -420,7 +420,7 @@ export async function actualizarEmpleado(
         const formattedNew = `S/. ${salario.toFixed(2)}`;
 
         await connection.query(
-          `INSERT INTO HISTORIAL_MODIFICACIONES (HMEmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, HMUserCodigo)
+          `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, UserCodigo)
            VALUES (?, 'Ajuste Salarial', ?, ?, ?, ?)`,
           [
             codigo,

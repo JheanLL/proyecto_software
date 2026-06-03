@@ -37,8 +37,8 @@ export default async function PerfilEmpleadoPage({
   const [historialRows] = await pool.query(
     `SELECT h.*, u.UserNombre 
    FROM HISTORIAL_MODIFICACIONES h
-   LEFT JOIN USUARIO u ON h.HMUserCodigo = u.UserCodigo
-   WHERE h.HMEmpCodigo = ? AND h.HMCampoModificado IN ('Ajuste Salarial', 'Cambio de Cargo / Área')
+   LEFT JOIN USUARIO u ON h.UserCodigo = u.UserCodigo
+   WHERE h.EmpCodigo = ? AND h.HMCampoModificado IN ('Ajuste Salarial', 'Cambio de Cargo / Área')
    ORDER BY h.HMFechaModificacion DESC, h.HMID DESC`,
     [codigo],
   );

@@ -15,10 +15,10 @@ export default async function AuditoriaPage() {
       h.HMCampoModificado,
       h.HMValorAnterior,
       h.HMValorNuevo,
-      h.HMEmpCodigo,
+      h.EmpCodigo,
       u.UserNombre
     FROM HISTORIAL_MODIFICACIONES h
-    LEFT JOIN USUARIO u ON h.HMUserCodigo = u.UserCodigo
+    LEFT JOIN USUARIO u ON h.UserCodigo = u.UserCodigo
     ORDER BY h.HMID DESC
   `);
 
@@ -155,11 +155,11 @@ export default async function AuditoriaPage() {
                     </td>
 
                     <td className='px-6 py-4 text-muted min-w-0 max-w-xs md:max-w-none'>
-                      {reg.HMEmpCodigo ? (
+                      {reg.EmpCodigo ? (
                         <span>
                           Para el empleado{' '}
                           <code className='text-xs bg-surface-hover px-1.5 py-0.5 rounded-md border border-border font-mono text-foreground'>
-                            {reg.HMEmpCodigo}
+                            {reg.EmpCodigo}
                           </code>
                           :
                           {reg.HMValorAnterior ? (
