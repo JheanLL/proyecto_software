@@ -197,7 +197,7 @@ export default function EditEmployeeForm({
           maxLength={8}
         />
 
-        <div className='col-span-2'>
+        <div className='md:col-span-2'>
           <InputField
             icon={User}
             label='Nombres'
