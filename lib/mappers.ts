@@ -37,7 +37,7 @@ export const mapBoletaPago = (row: any): BoletaPago => ({
 
 export const mapHistorial = (row: any): HistorialModificacion => ({
   HMID: Number(row.HMID),
-  EmpCodigo: String(row.EmpCodigo),
+  EmpCodigo: row.EmpCodigo ? String(row.EmpCodigo) : null,
   HMCampoModificado: String(row.HMCampoModificado),
   HMValorAnterior: row.HMValorAnterior ? String(row.HMValorAnterior) : null,
   HMValorNuevo: String(row.HMValorNuevo),

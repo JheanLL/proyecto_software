@@ -181,8 +181,23 @@ export default async function AuditoriaPage() {
                           )}
                         </span>
                       ) : (
-                        <span className='text-foreground font-medium'>
-                          {reg.HMValorNuevo}
+                        <span>
+                          {reg.HMValorAnterior && reg.HMValorAnterior !== 'Registro Nuevo' ? (
+                            <span>
+                              De{' '}
+                              <strong className='text-foreground font-medium'>
+                                &ldquo;{reg.HMValorAnterior}&rdquo;
+                              </strong>{' '}
+                              a{' '}
+                              <strong className='text-foreground font-medium'>
+                                &ldquo;{reg.HMValorNuevo}&rdquo;
+                              </strong>
+                            </span>
+                          ) : (
+                            <span className='text-foreground font-medium'>
+                              {reg.HMValorNuevo}
+                            </span>
+                          )}
                         </span>
                       )}
                     </td>
