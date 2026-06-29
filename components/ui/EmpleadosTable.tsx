@@ -230,7 +230,15 @@ export default function EmpleadosTable({
                         {emp.EdadActual} años
                       </div>
                       <div className='text-xs text-muted mt-0.5'>
-                        {emp.antiguedadExacta}
+                        {emp.antiguedadExacta != null ? (
+                          emp.antiguedadExacta
+                        ) : (
+                          <span className='inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-warning-light text-warning border border-warning/20'>
+                            Pendiente · inicia {emp.EmpFechaIngreso
+                              ? new Date(emp.EmpFechaIngreso + 'T00:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })
+                              : '—'}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap text-right tabular-nums'>

@@ -32,8 +32,9 @@ export default function LoginPage() {
     const result = await loginAction(formData);
 
     if (result.success) {
-      router.push("/");
-      router.refresh();
+      // Usar window.location.href en lugar de router.push evita bugs de caché en el App Router
+      // donde se queda colgado en "iniciando sesión" después de un pase a producción.
+      window.location.href = "/";
     } else {
       setError(result.message);
       setLoading(false);

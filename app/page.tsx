@@ -53,9 +53,7 @@ function calcularAntiguedad(fechaIngreso: string) {
   }
 
   if (fecha > hoy || anios < 0) {
-    anios = 0;
-    meses = 0;
-    dias = 0;
+    return null;
   }
 
   return `${anios} años, ${meses} meses, ${dias} días`;
