@@ -15,7 +15,8 @@ export async function proxy(request: NextRequest) {
   const isPublicPath = pathname === '/login' || pathname.startsWith('/api/setup');
 
   // Si NO hay token y trata de entrar al dashboard -> Patada al Login
-  if (!token && !isPublicPath) {
+  // IMPORTANTE: Solo redirigir peticiones GET para no romper las Server Actions (POST) con E394.
+  if (!token && !isPublicPath && request.method === 'GET') {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
@@ -25,14 +26,23 @@ export async function proxy(request: NextRequest) {
       await jwtVerify(token, SECRET_KEY);
       
       // Si el token es válido y trata de entrar a la pantalla de login, lo mandamos al dashboard
-      if (isPublicPath && pathname === '/login') {
+      // IMPORTANTE: Solo redirigir peticiones GET. Las peticiones POST (Server Actions) 
+      // no deben ser redirigidas por el middleware porque romperían la respuesta JSON con un E394.
+      if (isPublicPath && pathname === '/login' && request.method === 'GET') {
         return NextResponse.redirect(new URL('/', request.url));
       }
     } catch {
-      // Si el token expiró o es falso, lo borramos y lo mandamos al login
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('auth_token');
-      return response;
+      // Si el token expiró o es falso, lo borramos
+      // IMPORTANTE: Solo redirigir si es GET. Para POST (Server Actions), usar next() con la cookie borrada.
+      if (request.method === 'GET') {
+        const response = NextResponse.redirect(new URL('/login', request.url));
+        response.cookies.delete('auth_token');
+        return response;
+      } else {
+        const response = NextResponse.next();
+        response.cookies.delete('auth_token');
+        return response;
+      }
     }
   }
 
