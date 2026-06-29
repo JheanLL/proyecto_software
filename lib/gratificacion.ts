@@ -2,13 +2,15 @@
  * Función pura para calcular la gratificación según la legislación peruana.
  * 
  * La gratificación se paga en julio y diciembre.
- * El monto es proporcional a los meses trabajados en el semestre:
- *   - Cada mes completo trabajado equivale a S/50
- *   - Máximo: 6 meses (S/300)
- *   - Mínimo: 0 meses (S/0) en meses que no sean julio o diciembre
+ * Cada gratificación corresponde a un semestre específico:
+ *   - Julio: se computan los meses de enero a junio (6 meses)
+ *   - Diciembre: se computan los meses de julio a diciembre (diciembre se cuenta por adelantado)
+ * 
+ * Un mes es computable si el empleado ingresó en o antes del primer día de ese mes.
+ * Cada mes completo trabajado equivale a S/50 (máximo 6 meses = S/300).
  * 
  * @param fechaIngreso - Fecha de ingreso del empleado
- * @param mesActual - Mes actual (1-12), por defecto el mes actual del sistema
+ * @param mesActual - Mes actual (0-indexed: enero=0), por defecto el mes actual del sistema
  * @returns Monto de gratificación calculado
  */
 export function calcularGratificacion(
@@ -25,18 +27,23 @@ export function calcularGratificacion(
     ? new Date(fechaIngreso) 
     : fechaIngreso;
 
-  // Calcular meses trabajados desde la fecha de ingreso
-  let mesesTrabajados =
-    (hoy.getFullYear() - ingreso.getFullYear()) * 12 +
-    (hoy.getMonth() - ingreso.getMonth());
+  const anio = hoy.getFullYear();
 
-  // Si el día actual es menor al día de ingreso, el mes no está completo
-  if (hoy.getDate() < ingreso.getDate()) {
-    mesesTrabajados--;
+  // Rango del semestre computable (0-indexed):
+  // Julio: enero(0) a junio(5)
+  // Diciembre: julio(6) a diciembre(11) — diciembre se cuenta por adelantado
+  const inicioSemestre = mes === 6 ? 0 : 6;
+  const finSemestre = mes === 6 ? 5 : 11;
+
+  let mesesComputables = 0;
+
+  for (let m = inicioSemestre; m <= finSemestre; m++) {
+    const primerDiaMes = new Date(anio, m, 1);
+    // El mes es computable si el empleado ya estaba trabajando al inicio del mes
+    if (ingreso <= primerDiaMes) {
+      mesesComputables++;
+    }
   }
-
-  // Máximo 6 meses computables por semestre
-  const mesesComputables = Math.max(0, Math.min(6, mesesTrabajados));
 
   // S/50 por mes completo trabajado
   return mesesComputables * 50;

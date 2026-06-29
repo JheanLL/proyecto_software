@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { registrarBoleta } from "@/actions/boletas";
+import { calcularGratificacion } from "@/lib/gratificacion";
 import {
   X,
   User,
@@ -37,24 +38,7 @@ export default function ModalGenerarBoleta({
       return { gratiCalculada: 0, total: 0 };
     }
 
-    const hoy = new Date();
-    const mesActual = hoy.getMonth();
-    let montoGratificacion = 0;
-
-    if (mesActual === 6 || mesActual === 11) {
-      const fechaIngreso = new Date(empleado.EmpFechaIngreso);
-
-      let mesesTrabajados =
-        (hoy.getFullYear() - fechaIngreso.getFullYear()) * 12 +
-        (hoy.getMonth() - fechaIngreso.getMonth());
-
-      if (hoy.getDate() < fechaIngreso.getDate()) {
-        mesesTrabajados--;
-      }
-
-      const mesesComputables = Math.max(0, Math.min(6, mesesTrabajados));
-      montoGratificacion = mesesComputables * 50;
-    }
+    const montoGratificacion = calcularGratificacion(empleado.EmpFechaIngreso);
 
     return {
       gratiCalculada: montoGratificacion,
