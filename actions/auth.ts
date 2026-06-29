@@ -4,6 +4,7 @@ import pool from '@/lib/db';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
+import { redirect } from 'next/navigation';
 
 export async function loginAction(formData: FormData) {
   const email = formData.get('email') as string;
@@ -53,11 +54,12 @@ export async function loginAction(formData: FormData) {
       path: '/',
     });
 
-    return { success: true, message: 'Login exitoso' };
   } catch (error) {
     console.error('Error en login:', error);
     return { success: false, message: 'Error interno del servidor' };
   }
+  // Redirigir fuera del bloque try/catch (ya que redirect arroja un error interno en Next.js)
+  redirect('/');
 }
 
 export async function logoutAction() {
