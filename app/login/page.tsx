@@ -29,14 +29,20 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const result = await loginAction(formData);
+    try {
+      const result = await loginAction(formData);
 
-    if (result.success) {
-      // Usar window.location.href en lugar de router.push evita bugs de caché en el App Router
-      // donde se queda colgado en "iniciando sesión" después de un pase a producción.
-      window.location.href = "/";
-    } else {
-      setError(result.message);
+      if (result.success) {
+        // Usar window.location.href en lugar de router.push evita bugs de caché en el App Router
+        // donde se queda colgado en "iniciando sesión" después de un pase a producción.
+        window.location.href = "/";
+      } else {
+        setError(result.message);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Ocurrió un error inesperado al contactar al servidor. Inténtalo de nuevo.");
       setLoading(false);
     }
   };
