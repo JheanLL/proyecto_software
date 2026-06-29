@@ -36,7 +36,12 @@ export default function LoginPage() {
         setError(result.message);
         setLoading(false);
       }
-    } catch (err) {
+    } catch (err: any) {
+      // Ignoramos el error si es una redirección de Next.js (NEXT_REDIRECT)
+      if (err?.message === "NEXT_REDIRECT" || err?.digest?.includes("NEXT_REDIRECT")) {
+        return;
+      }
+      
       console.error(err);
       setError("Ocurrió un error inesperado al contactar al servidor. Inténtalo de nuevo.");
       setLoading(false);
