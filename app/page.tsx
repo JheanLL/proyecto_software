@@ -112,17 +112,17 @@ export default async function Page() {
 
           {/* Stats & Actions */}
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6'>
-            <div className='gradient-brand rounded-xl p-5 shadow-lg shadow-brand/20 flex items-center justify-between gap-4'>
+            <div className='bg-surface border border-border border-l-4 border-l-brand rounded-xl p-5 flex items-center justify-between gap-4'>
                 <div>
-                  <p className='text-sm font-medium text-white/80 mb-1'>
-                    Empleados activos
+                  <p className='text-xs font-bold text-brand uppercase tracking-wider mb-1'>
+                    Total Activos
                   </p>
-                  <p className='text-3xl font-bold text-white'>
+                  <p className='text-4xl font-black text-foreground tracking-tight'>
                     {empleados.length}
                   </p>
                 </div>
-                <div className='w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10'>
-                  <Users className='w-6 h-6 text-white' />
+                <div className='opacity-10 dark:opacity-20'>
+                  <Users className='w-12 h-12 text-brand' />
                 </div>
             </div>
 
