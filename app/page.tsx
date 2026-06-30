@@ -11,9 +11,10 @@ import {
   Users,
 } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-
 import { mapEmpleado } from '@/lib/mappers';
+import { calcularAntiguedad } from '@/lib/dateUtils';
+
+export const dynamic = 'force-dynamic';
 
 async function getEmpleados() {
   const [rows] = await pool.query(`
@@ -35,29 +36,6 @@ async function getEmpleados() {
   }));
 }
 
-function calcularAntiguedad(fechaIngreso: string) {
-  const fecha = new Date(fechaIngreso);
-  const hoy = new Date();
-
-  let anios = hoy.getFullYear() - fecha.getFullYear();
-  let meses = hoy.getMonth() - fecha.getMonth();
-  let dias = hoy.getDate() - fecha.getDate();
-
-  if (dias < 0) {
-    meses--;
-    dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();
-  }
-  if (meses < 0) {
-    anios--;
-    meses += 12;
-  }
-
-  if (fecha > hoy || anios < 0) {
-    return null;
-  }
-
-  return `${anios} años, ${meses} meses, ${dias} días`;
-}
 
 export default async function Page() {
   let empleados: any[];

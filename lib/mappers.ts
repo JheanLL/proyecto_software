@@ -1,4 +1,5 @@
 import { Area, Empleado, BoletaPago, HistorialModificacion, Rol, Usuario } from '@/types';
+import { toDateString } from '@/lib/dateUtils';
 
 // En caso de que la DB cambie en el futuro, sólo ajusta cómo mapeas el row (any) a tus interfaces strictas de TypeScript.
 
@@ -18,10 +19,10 @@ export const mapEmpleado = (row: any): Empleado => ({
   EmpNombres: String(row.EmpNombres),
   EmpGenero: String(row.EmpGenero),
   EmpCorreo: String(row.EmpCorreo),
-  EmpFechaNacimiento: row.EmpFechaNacimiento ? new Date(row.EmpFechaNacimiento).toISOString().split('T')[0] : '',
-  EmpFechaIngreso: row.EmpFechaIngreso ? new Date(row.EmpFechaIngreso).toISOString().split('T')[0] : '',
-  EmpContratoInicio: row.EmpContratoInicio ? new Date(row.EmpContratoInicio).toISOString().split('T')[0] : '',
-  EmpContratoFin: row.EmpContratoFin ? new Date(row.EmpContratoFin).toISOString().split('T')[0] : '',
+  EmpFechaNacimiento: toDateString(row.EmpFechaNacimiento),
+  EmpFechaIngreso: toDateString(row.EmpFechaIngreso),
+  EmpContratoInicio: toDateString(row.EmpContratoInicio),
+  EmpContratoFin: toDateString(row.EmpContratoFin),
   EmpSalario: row.EmpSalario !== null && row.EmpSalario !== undefined ? Number(row.EmpSalario) : null,
   EmpActivo: Boolean(row.EmpActivo),
 });
@@ -29,7 +30,7 @@ export const mapEmpleado = (row: any): Empleado => ({
 export const mapBoletaPago = (row: any): BoletaPago => ({
   BoletaID: Number(row.BoletaID),
   EmpCodigo: String(row.EmpCodigo),
-  BoletaFecha: row.BoletaFecha ? new Date(row.BoletaFecha).toISOString().split('T')[0] : '',
+  BoletaFecha: toDateString(row.BoletaFecha),
   BoletaSalarioBase: Number(row.BoletaSalarioBase),
   BoletaGratificacion: Number(row.BoletaGratificacion),
   BoletaTotalPago: Number(row.BoletaTotalPago),
@@ -41,7 +42,7 @@ export const mapHistorial = (row: any): HistorialModificacion => ({
   HMCampoModificado: String(row.HMCampoModificado),
   HMValorAnterior: row.HMValorAnterior ? String(row.HMValorAnterior) : null,
   HMValorNuevo: String(row.HMValorNuevo),
-  HMFechaModificacion: row.HMFechaModificacion ? new Date(row.HMFechaModificacion).toISOString() : '',
+  HMFechaModificacion: row.HMFechaModificacion ? String(row.HMFechaModificacion) : '',
   UserCodigo: Number(row.UserCodigo),
 });
 

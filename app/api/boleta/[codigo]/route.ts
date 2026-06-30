@@ -47,7 +47,7 @@ export async function GET(
   worksheet.getCell('A1').value = 'BOLETA DE PAGO DE HABERES';
   worksheet.getCell('A1').style = titleStyle as any;
 
-  worksheet.getCell('A2').value = `Fecha: ${new Date().toLocaleDateString()}`;
+  worksheet.getCell('A2').value = `Fecha: ${new Date().toLocaleDateString('es-PE', { timeZone: 'America/Lima', day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 
   worksheet.addRow([
     'Nombres:',

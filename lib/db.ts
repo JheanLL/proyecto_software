@@ -15,6 +15,7 @@ export const pool =
     ssl: { rejectUnauthorized: false },
     connectionLimit: 10,
     timezone: "Z",
+    dateStrings: true,
   });
 
 if (process.env.NODE_ENV !== 'production') globalForDb.pool = pool;

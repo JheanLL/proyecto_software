@@ -10,8 +10,10 @@ const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || 'mi_clave_secreta_super_segura_para_desarrollo',
 );
 
+import { hoyPeru, calcularEdad, toDateString } from '@/lib/dateUtils';
+
 function obtenerHoyPeru() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+  return toDateString(hoyPeru());
 }
 
 async function obtenerUserIdDesdeJWT(): Promise<number> {
@@ -50,6 +52,11 @@ export async function agregarEmpleado(
 
   // Validaciones
   const hoyStr = obtenerHoyPeru();
+
+  // Validar mayoría de edad (backend — no depender solo del frontend)
+  const edadCalc = calcularEdad(fechaNac);
+  if (edadCalc < 18)
+    return { success: false, message: 'El empleado debe ser mayor de edad.' };
   if (!contratoInicio.endsWith('-01'))
     return {
       success: false,
@@ -355,9 +362,12 @@ export async function actualizarEmpleado(
   try {
     await connection.beginTransaction();
     const [oldRows]: any = await connection.query(
-      `SELECT e.AreaID, e.EmpSalario, a.AreaNombre 
-       FROM EMPLEADO e 
-       LEFT JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID 
+      `SELECT e.AreaID, e.EmpSalario, e.EmpDNI, e.EmpNombres,
+              e.EmpApellidoPaterno, e.EmpApellidoMaterno, e.EmpGenero,
+              e.EmpCorreo, e.EmpFechaNacimiento, e.EmpContratoInicio, e.EmpContratoFin,
+              a.AreaNombre
+       FROM EMPLEADO e
+       LEFT JOIN AREA_TRABAJO a ON e.AreaID = a.AreaID
        WHERE e.EmpCodigo = ?`,
       [codigo],
     );
@@ -376,7 +386,7 @@ export async function actualizarEmpleado(
       `UPDATE EMPLEADO SET 
         AreaID = ?, EmpDNI = ?, EmpApellidoPaterno = ?, EmpApellidoMaterno = ?, 
         EmpNombres = ?, EmpGenero = ?, EmpCorreo = ?, EmpFechaNacimiento = ?, 
-        EmpContratoInicio = ?, EmpContratoFin = ?, EmpSalario = ?
+        EmpFechaIngreso = ?, EmpContratoInicio = ?, EmpContratoFin = ?, EmpSalario = ?
        WHERE EmpCodigo = ?`,
       [
         areaId,
@@ -387,6 +397,7 @@ export async function actualizarEmpleado(
         genero,
         correo,
         fechaNac,
+        contratoInicio, // EmpFechaIngreso siempre igual a EmpContratoInicio
         contratoInicio,
         contratoFin,
         salario,
@@ -400,37 +411,40 @@ export async function actualizarEmpleado(
       .replace('T', ' ');
 
     if (anterior) {
+      // Helper para insertar una entrada en el historial
+      const registrar = async (campo: string, viejo: string, nuevo: string) => {
+        if (viejo.trim() !== nuevo.trim()) {
+          await connection.query(
+            `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, UserCodigo)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [codigo, campo, viejo, nuevo, FechaModificacion, idUsuarioActual],
+          );
+        }
+      };
+
+      // Cambio de Cargo / Área
       if (Number(anterior.AreaID) !== areaId) {
-        await connection.query(
-          `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, UserCodigo)
-           VALUES (?, 'Cambio de Cargo / Área', ?, ?, ?, ?)`,
-          [
-            codigo,
-            anterior.AreaNombre || 'Sin Cargo',
-            nuevoNombreArea,
-            FechaModificacion,
-            idUsuarioActual,
-          ],
-        );
+        await registrar('Cambio de Cargo / Área', anterior.AreaNombre || 'Sin Cargo', nuevoNombreArea);
       }
 
+      // Ajuste Salarial
       const salarioAnteriorNumber = parseFloat(anterior.EmpSalario || '0');
       if (salarioAnteriorNumber !== salario) {
-        const formattedOld = `S/. ${salarioAnteriorNumber.toFixed(2)}`;
-        const formattedNew = `S/. ${salario.toFixed(2)}`;
-
-        await connection.query(
-          `INSERT INTO HISTORIAL_MODIFICACIONES (EmpCodigo, HMCampoModificado, HMValorAnterior, HMValorNuevo, HMFechaModificacion, UserCodigo)
-           VALUES (?, 'Ajuste Salarial', ?, ?, ?, ?)`,
-          [
-            codigo,
-            formattedOld,
-            formattedNew,
-            FechaModificacion,
-            idUsuarioActual,
-          ],
-        );
+        await registrar('Ajuste Salarial', `S/. ${salarioAnteriorNumber.toFixed(2)}`, `S/. ${salario.toFixed(2)}`);
       }
+
+      // Datos personales y de contrato
+      await registrar('DNI', String(anterior.EmpDNI || ''), dni);
+      await registrar('Nombres', String(anterior.EmpNombres || ''), nombres);
+      await registrar('Apellido Paterno', String(anterior.EmpApellidoPaterno || ''), apePaterno);
+      await registrar('Apellido Materno', String(anterior.EmpApellidoMaterno || ''), apeMaterno);
+      await registrar('Género', String(anterior.EmpGenero || ''), genero);
+      await registrar('Correo electrónico', String(anterior.EmpCorreo || ''), correo);
+
+      // Fechas
+      await registrar('Fecha de nacimiento', toDateString(anterior.EmpFechaNacimiento), fechaNac);
+      await registrar('Fecha inicio de contrato', toDateString(anterior.EmpContratoInicio), contratoInicio);
+      await registrar('Fecha fin de contrato', toDateString(anterior.EmpContratoFin), contratoFin);
     }
 
     await connection.commit();

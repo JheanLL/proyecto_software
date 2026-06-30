@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { agregarEmpleado, obtenerProximoCodigo } from "@/actions/empleados";
+import { calcularEdad } from "@/lib/dateUtils";
 import { Hash, IdCard, User, Calendar, Mail, Briefcase, Users, Save, X, Loader2, ChevronDown } from "lucide-react";
 
 interface Area { AreaID: number; AreaNombre: string; }
@@ -88,13 +89,7 @@ export default function NewEmployeeForm({ areas }: NewEmployeeFormProps) {
       return;
     }
 
-    const fechaNac = new Date(formData.get("fechaNac") as string);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    let edad = hoy.getFullYear() - fechaNac.getFullYear();
-    const mesCumplido = hoy.getMonth() > fechaNac.getMonth() ||
-      (hoy.getMonth() === fechaNac.getMonth() && hoy.getDate() >= fechaNac.getDate());
-    if (!mesCumplido) edad--;
+    const edad = calcularEdad(formData.get("fechaNac") as string);
     if (edad < 18) {
       toast.error("El empleado debe ser mayor de edad.");
       setSubmitting(false);

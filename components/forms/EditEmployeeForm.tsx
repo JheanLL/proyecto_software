@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { actualizarEmpleado } from '@/actions/empleados';
+import { calcularEdad } from '@/lib/dateUtils';
 import {
   Hash,
   IdCard,
@@ -113,13 +114,7 @@ export default function EditEmployeeForm({
       return;
     }
 
-    const fechaNac = new Date(fechaNacStr);
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    let edad = hoy.getFullYear() - fechaNac.getFullYear();
-    const mesCumplido = hoy.getMonth() > fechaNac.getMonth() ||
-      (hoy.getMonth() === fechaNac.getMonth() && hoy.getDate() >= fechaNac.getDate());
-    if (!mesCumplido) edad--;
+    const edad = calcularEdad(fechaNacStr);
     if (edad < 18) {
       toast.error('El empleado debe ser mayor de edad.');
       setSubmitting(false);

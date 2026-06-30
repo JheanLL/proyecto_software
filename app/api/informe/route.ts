@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import ExcelJS from 'exceljs';
 import pool from '@/lib/db';
 
+import { toUtcDate, hoyPeru, calcularEdad, calcularAntiguedad, toDateString } from '@/lib/dateUtils';
+
 export async function GET() {
   const [rows]: any = await pool.query(`
     SELECT 
@@ -26,7 +28,8 @@ export async function GET() {
   const activeRows = rows.filter((r: any) => r.EmpActivo === 1);
   const activeBoletas = boletas.filter((b: any) => b.EmpActivo === 1);
 
-  const hoy = new Date();
+  const hoy = hoyPeru();
+
   const workbook = new ExcelJS.Workbook();
 
   // ============================
@@ -353,15 +356,8 @@ export async function GET() {
     const rn = ds + idx;
     codigoRowMap[emp.EmpCodigo] = rn;
 
-    const fn = new Date(emp.EmpFechaNacimiento);
-    const ed = hoy.getFullYear() - fn.getUTCFullYear();
-    const fi = new Date(emp.EmpFechaIngreso);
-    let tm =
-      (hoy.getFullYear() - fi.getUTCFullYear()) * 12 +
-      (hoy.getMonth() - fi.getUTCMonth());
-    if (tm < 0) tm = 0;
-    const a = Math.floor(tm / 12);
-    const m = tm % 12;
+    const ed          = calcularEdad(emp.EmpFechaNacimiento);
+    const antiguedad  = calcularAntiguedad(emp.EmpFechaIngreso);
 
     const isInactive = emp.EmpActivo === 0;
     const inactiveStyle = isInactive ? { argb: 'FF999999' } : { argb: 'FF2E75B6' };
@@ -389,7 +385,7 @@ export async function GET() {
     wsInf.getCell(rn, 5).value = ed;
     wsInf.getCell(rn, 5).alignment = { horizontal: 'center' };
     if (isInactive) wsInf.getCell(rn, 5).font = { color: { argb: 'FF999999' }, italic: true };
-    wsInf.getCell(rn, 6).value = `${a} años, ${m} meses`;
+    wsInf.getCell(rn, 6).value = antiguedad ?? 'Pendiente';
     wsInf.getCell(rn, 6).alignment = { horizontal: 'center' };
     if (isInactive) wsInf.getCell(rn, 6).font = { color: { argb: 'FF999999' }, italic: true };
     wsInf.getCell(rn, 7).value = Number(emp.SalarioBase);
@@ -510,7 +506,7 @@ export async function GET() {
   const primerInactivoIdx = boletas.findIndex((b: any) => b.EmpActivo === 0);
 
   boletas.forEach((b: any, idx: number) => {
-    const rn = dd + idx;
+    let rn = dd + idx;
     const isInactive = b.EmpActivo === 0;
 
     // Pintar separador visual antes del primer inactivo
@@ -538,12 +534,12 @@ export async function GET() {
         };
       }
       wsDet.getRow(rn).height = 26;
-      return; // Saltar esta fila (es el separador, no una boleta)
     }
 
-    // Ajustar índice real considerando el separador
-    // Si ya pasamos el separador, el índice de boleta real es idx-1
-    const boletaIdx = primerInactivoIdx !== -1 && idx > primerInactivoIdx ? idx - 1 : idx;
+    // Ajustar fila real desplazándola hacia abajo si ya pintamos o vamos a pintar el separador
+    if (primerInactivoIdx !== -1 && idx >= primerInactivoIdx) {
+      rn += 1;
+    }
 
     // Registrar primera ocurrencia de cada código
     if (!(b.EmpCodigo in primerBoletaRow)) {
@@ -575,8 +571,9 @@ export async function GET() {
 
     wsDet.getCell(rn, 3).value = `${b.EmpNombres} ${b.EmpApellidoPaterno}`;
     if (isInactive) wsDet.getCell(rn, 3).font = { color: { argb: 'FF999999' }, italic: true, strike: true };
-    wsDet.getCell(rn, 4).value = new Date(b.BoletaFecha);
-    wsDet.getCell(rn, 4).numFmt = 'DD/MM/YYYY';
+    const fb = toDateString(b.BoletaFecha);
+    const [yyyy, mm, day] = fb.split('-');
+    wsDet.getCell(rn, 4).value = `${day}/${mm}/${yyyy}`;
     wsDet.getCell(rn, 4).alignment = { horizontal: 'center' };
     if (isInactive) wsDet.getCell(rn, 4).font = { color: { argb: 'FF999999' }, italic: true };
     wsDet.getCell(rn, 5).value = Number(b.BoletaSalarioBase);

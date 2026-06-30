@@ -1,0 +1,450 @@
+{
+  "empleados": [
+    {
+      "EmpCodigo": "EMP00001",
+      "AreaID": 2,
+      "EmpDNI": "71234567",
+      "EmpApellidoPaterno": "López",
+      "EmpApellidoMaterno": "Mendoza",
+      "EmpNombres": "Juan Carlos",
+      "EmpGenero": "M",
+      "EmpCorreo": "juan.lopez@empresa.com",
+      "EmpFechaNacimiento": "1995-04-12T05:00:00.000Z",
+      "EmpFechaIngreso": "2025-11-01T05:00:00.000Z",
+      "EmpContratoInicio": "2025-11-01T05:00:00.000Z",
+      "EmpContratoFin": "2027-11-01T05:00:00.000Z",
+      "EmpSalario": "1800.00",
+      "EmpActivo": 1
+    },
+    {
+      "EmpCodigo": "EMP00002",
+      "AreaID": 1,
+      "EmpDNI": "76543210",
+      "EmpApellidoPaterno": "Gómez",
+      "EmpApellidoMaterno": "Quispe",
+      "EmpNombres": "Ana Maria",
+      "EmpGenero": "F",
+      "EmpCorreo": "ana.gomez@empresa.com",
+      "EmpFechaNacimiento": "2000-08-24T05:00:00.000Z",
+      "EmpFechaIngreso": "2026-02-01T05:00:00.000Z",
+      "EmpContratoInicio": "2026-02-01T05:00:00.000Z",
+      "EmpContratoFin": "2027-02-01T05:00:00.000Z",
+      "EmpSalario": null,
+      "EmpActivo": 1
+    },
+    {
+      "EmpCodigo": "EMP00003",
+      "AreaID": 4,
+      "EmpDNI": "45678912",
+      "EmpApellidoPaterno": "Torres",
+      "EmpApellidoMaterno": "Rojas",
+      "EmpNombres": "Diego Armando",
+      "EmpGenero": "M",
+      "EmpCorreo": "diego.torres@empresa.com",
+      "EmpFechaNacimiento": "2002-11-05T05:00:00.000Z",
+      "EmpFechaIngreso": "2026-05-01T05:00:00.000Z",
+      "EmpContratoInicio": "2026-05-01T05:00:00.000Z",
+      "EmpContratoFin": "2026-11-01T05:00:00.000Z",
+      "EmpSalario": null,
+      "EmpActivo": 1
+    },
+    {
+      "EmpCodigo": "EMP00007",
+      "AreaID": 1,
+      "EmpDNI": "74589632",
+      "EmpApellidoPaterno": "Portocarrero",
+      "EmpApellidoMaterno": "Tuesta",
+      "EmpNombres": "Jheferson",
+      "EmpGenero": "M",
+      "EmpCorreo": "tuesta@empresa.com",
+      "EmpFechaNacimiento": "2003-06-22T05:00:00.000Z",
+      "EmpFechaIngreso": "2026-07-01T05:00:00.000Z",
+      "EmpContratoInicio": "2026-07-01T05:00:00.000Z",
+      "EmpContratoFin": "2027-07-01T05:00:00.000Z",
+      "EmpSalario": "1300.00",
+      "EmpActivo": 1
+    },
+    {
+      "EmpCodigo": "EMP00008",
+      "AreaID": 2,
+      "EmpDNI": "12345679",
+      "EmpApellidoPaterno": "a",
+      "EmpApellidoMaterno": "a",
+      "EmpNombres": "prueba",
+      "EmpGenero": "M",
+      "EmpCorreo": "g@gmail.com",
+      "EmpFechaNacimiento": "2008-06-30T05:00:00.000Z",
+      "EmpFechaIngreso": "2026-06-01T05:00:00.000Z",
+      "EmpContratoInicio": "2026-06-01T05:00:00.000Z",
+      "EmpContratoFin": "2027-01-01T05:00:00.000Z",
+      "EmpSalario": "1600.00",
+      "EmpActivo": 1
+    },
+    {
+      "EmpCodigo": "EMP00009",
+      "AreaID": 1,
+      "EmpDNI": "10778814",
+      "EmpApellidoPaterno": "h",
+      "EmpApellidoMaterno": "h",
+      "EmpNombres": "prueba",
+      "EmpGenero": "M",
+      "EmpCorreo": "71@unu.edu.pe",
+      "EmpFechaNacimiento": "2008-06-30T05:00:00.000Z",
+      "EmpFechaIngreso": "2026-07-01T05:00:00.000Z",
+      "EmpContratoInicio": "2026-07-01T05:00:00.000Z",
+      "EmpContratoFin": "2027-01-01T05:00:00.000Z",
+      "EmpSalario": "1300.00",
+      "EmpActivo": 0
+    },
+    {
+      "EmpCodigo": "EMP00010",
+      "AreaID": 1,
+      "EmpDNI": "10778814",
+      "EmpApellidoPaterno": "h",
+      "EmpApellidoMaterno": "h",
+      "EmpNombres": "prueba a",
+      "EmpGenero": "M",
+      "EmpCorreo": "71@unu.edu.pe",
+      "EmpFechaNacimiento": "2008-06-30T05:00:00.000Z",
+      "EmpFechaIngreso": "2026-07-01T05:00:00.000Z",
+      "EmpContratoInicio": "2026-07-01T05:00:00.000Z",
+      "EmpContratoFin": "2027-01-01T05:00:00.000Z",
+      "EmpSalario": "1300.00",
+      "EmpActivo": 0
+    }
+  ],
+  "boletas": [
+    {
+      "BoletaID": 1,
+      "EmpCodigo": "EMP00001",
+      "BoletaFecha": "2025-12-31T05:00:00.000Z",
+      "BoletaSalarioBase": "1800.00",
+      "BoletaGratificacion": "100.00",
+      "BoletaTotalPago": "1900.00"
+    },
+    {
+      "BoletaID": 2,
+      "EmpCodigo": "EMP00001",
+      "BoletaFecha": "2026-01-31T05:00:00.000Z",
+      "BoletaSalarioBase": "1800.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1800.00"
+    },
+    {
+      "BoletaID": 3,
+      "EmpCodigo": "EMP00001",
+      "BoletaFecha": "2026-02-28T05:00:00.000Z",
+      "BoletaSalarioBase": "1800.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1800.00"
+    },
+    {
+      "BoletaID": 4,
+      "EmpCodigo": "EMP00001",
+      "BoletaFecha": "2026-03-31T05:00:00.000Z",
+      "BoletaSalarioBase": "1800.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1800.00"
+    },
+    {
+      "BoletaID": 5,
+      "EmpCodigo": "EMP00001",
+      "BoletaFecha": "2026-04-30T05:00:00.000Z",
+      "BoletaSalarioBase": "1800.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1800.00"
+    },
+    {
+      "BoletaID": 6,
+      "EmpCodigo": "EMP00001",
+      "BoletaFecha": "2026-05-31T05:00:00.000Z",
+      "BoletaSalarioBase": "1800.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1800.00"
+    },
+    {
+      "BoletaID": 7,
+      "EmpCodigo": "EMP00002",
+      "BoletaFecha": "2026-03-31T05:00:00.000Z",
+      "BoletaSalarioBase": "1300.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1300.00"
+    },
+    {
+      "BoletaID": 8,
+      "EmpCodigo": "EMP00002",
+      "BoletaFecha": "2026-04-30T05:00:00.000Z",
+      "BoletaSalarioBase": "1300.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1300.00"
+    },
+    {
+      "BoletaID": 9,
+      "EmpCodigo": "EMP00002",
+      "BoletaFecha": "2026-05-31T05:00:00.000Z",
+      "BoletaSalarioBase": "1300.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1300.00"
+    },
+    {
+      "BoletaID": 13,
+      "EmpCodigo": "EMP00008",
+      "BoletaFecha": "2026-06-30T05:00:00.000Z",
+      "BoletaSalarioBase": "1600.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1600.00"
+    },
+    {
+      "BoletaID": 14,
+      "EmpCodigo": "EMP00009",
+      "BoletaFecha": "2026-06-30T05:00:00.000Z",
+      "BoletaSalarioBase": "1300.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1300.00"
+    },
+    {
+      "BoletaID": 15,
+      "EmpCodigo": "EMP00010",
+      "BoletaFecha": "2026-06-30T05:00:00.000Z",
+      "BoletaSalarioBase": "1300.00",
+      "BoletaGratificacion": "0.00",
+      "BoletaTotalPago": "1300.00"
+    }
+  ],
+  "historial": [
+    {
+      "HMID": 1,
+      "EmpCodigo": "EMP00001",
+      "HMCampoModificado": "Registro de Empleado",
+      "HMValorAnterior": null,
+      "HMValorNuevo": "Nuevo Registro en el Sistema",
+      "HMFechaModificacion": "2025-11-01T13:30:00.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 2,
+      "EmpCodigo": "EMP00002",
+      "HMCampoModificado": "Registro de Empleado",
+      "HMValorAnterior": null,
+      "HMValorNuevo": "Nuevo Registro en el Sistema",
+      "HMFechaModificacion": "2026-02-01T14:00:00.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 3,
+      "EmpCodigo": "EMP00003",
+      "HMCampoModificado": "Registro de Empleado",
+      "HMValorAnterior": null,
+      "HMValorNuevo": "Nuevo Registro en el Sistema",
+      "HMFechaModificacion": "2026-05-01T15:15:00.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 4,
+      "EmpCodigo": "EMP00002",
+      "HMCampoModificado": "Cambio de Cargo / Área",
+      "HMValorAnterior": "Soporte TI",
+      "HMValorNuevo": "Practicante",
+      "HMFechaModificacion": "2026-03-15T16:00:00.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 5,
+      "EmpCodigo": "EMP00002",
+      "HMCampoModificado": "Ajuste Salarial",
+      "HMValorAnterior": "S/. 1900.00",
+      "HMValorNuevo": "S/. 1300.00",
+      "HMFechaModificacion": "2026-03-15T16:00:00.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 22,
+      "EmpCodigo": "EMP00007",
+      "HMCampoModificado": "Registro de Empleado",
+      "HMValorAnterior": null,
+      "HMValorNuevo": "Nuevo Registro",
+      "HMFechaModificacion": "2026-06-22T17:42:15.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 23,
+      "EmpCodigo": "EMP00007",
+      "HMCampoModificado": "Ajuste Salarial",
+      "HMValorAnterior": "S/. 1300.00",
+      "HMValorNuevo": "S/. 1400.00",
+      "HMFechaModificacion": "2026-06-22T17:43:13.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 34,
+      "EmpCodigo": "EMP00007",
+      "HMCampoModificado": "Ajuste Salarial",
+      "HMValorAnterior": "S/. 1400.00",
+      "HMValorNuevo": "S/. 1300.00",
+      "HMFechaModificacion": "2026-06-22T19:18:19.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 35,
+      "EmpCodigo": null,
+      "HMCampoModificado": "Modificación de Área",
+      "HMValorAnterior": "Practicante - S/. 1300.00",
+      "HMValorNuevo": "Practicante - S/. 1300.01",
+      "HMFechaModificacion": "2026-06-23T02:46:36.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 36,
+      "EmpCodigo": null,
+      "HMCampoModificado": "Modificación de Área",
+      "HMValorAnterior": "Practicante - S/. 1300.01",
+      "HMValorNuevo": "Practicante - S/. 1300",
+      "HMFechaModificacion": "2026-06-23T02:46:39.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 37,
+      "EmpCodigo": "EMP00008",
+      "HMCampoModificado": "Registro de Empleado",
+      "HMValorAnterior": null,
+      "HMValorNuevo": "Nuevo Registro",
+      "HMFechaModificacion": "2026-06-30T18:27:58.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 38,
+      "EmpCodigo": "EMP00008",
+      "HMCampoModificado": "Fecha inicio de contrato",
+      "HMValorAnterior": "2026-06-01",
+      "HMValorNuevo": "2026-07-01",
+      "HMFechaModificacion": "2026-06-30T18:48:12.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 39,
+      "EmpCodigo": "EMP00008",
+      "HMCampoModificado": "Cambio de Cargo / Área",
+      "HMValorAnterior": "Practicante",
+      "HMValorNuevo": "Desarrollador",
+      "HMFechaModificacion": "2026-06-30T18:52:54.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 40,
+      "EmpCodigo": "EMP00008",
+      "HMCampoModificado": "Ajuste Salarial",
+      "HMValorAnterior": "S/. 1300.00",
+      "HMValorNuevo": "S/. 1600.00",
+      "HMFechaModificacion": "2026-06-30T18:52:54.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 41,
+      "EmpCodigo": "EMP00008",
+      "HMCampoModificado": "Fecha inicio de contrato",
+      "HMValorAnterior": "2026-07-01",
+      "HMValorNuevo": "2026-06-01",
+      "HMFechaModificacion": "2026-06-30T18:52:54.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 42,
+      "EmpCodigo": "EMP00009",
+      "HMCampoModificado": "Registro de Empleado",
+      "HMValorAnterior": null,
+      "HMValorNuevo": "Nuevo Registro",
+      "HMFechaModificacion": "2026-06-30T19:46:19.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 43,
+      "EmpCodigo": "EMP00009",
+      "HMCampoModificado": "Eliminación Lógica",
+      "HMValorAnterior": "Activo",
+      "HMValorNuevo": "Inactivo",
+      "HMFechaModificacion": "2026-06-30T19:47:48.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 44,
+      "EmpCodigo": "EMP00010",
+      "HMCampoModificado": "Registro de Empleado",
+      "HMValorAnterior": null,
+      "HMValorNuevo": "Nuevo Registro",
+      "HMFechaModificacion": "2026-06-30T19:48:09.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 45,
+      "EmpCodigo": "EMP00010",
+      "HMCampoModificado": "Nombres",
+      "HMValorAnterior": "prueba",
+      "HMValorNuevo": "prueba a",
+      "HMFechaModificacion": "2026-06-30T19:54:05.000Z",
+      "UserCodigo": 1
+    },
+    {
+      "HMID": 46,
+      "EmpCodigo": "EMP00010",
+      "HMCampoModificado": "Eliminación Lógica",
+      "HMValorAnterior": "Activo",
+      "HMValorNuevo": "Inactivo",
+      "HMFechaModificacion": "2026-06-30T19:54:56.000Z",
+      "UserCodigo": 1
+    }
+  ],
+  "areas": [
+    {
+      "AreaID": 1,
+      "AreaNombre": "Practicante",
+      "AreaSalario": "1300.00",
+      "AreaActivo": 1
+    },
+    {
+      "AreaID": 2,
+      "AreaNombre": "Desarrollador",
+      "AreaSalario": "1600.00",
+      "AreaActivo": 1
+    },
+    {
+      "AreaID": 3,
+      "AreaNombre": "Soporte TI",
+      "AreaSalario": "1900.00",
+      "AreaActivo": 1
+    },
+    {
+      "AreaID": 4,
+      "AreaNombre": "Analista TI",
+      "AreaSalario": "2200.00",
+      "AreaActivo": 1
+    },
+    {
+      "AreaID": 5,
+      "AreaNombre": "Gerente de TI",
+      "AreaSalario": "2500.00",
+      "AreaActivo": 1
+    }
+  ],
+  "roles": [
+    {
+      "RolID": 1,
+      "RolNombre": "Administrador"
+    }
+  ],
+  "usuarios": [
+    {
+      "UserCodigo": 1,
+      "UserNombre": "Administrador General",
+      "UserCorreo": "admin@empresa.com",
+      "UserPassword": "$2b$10$hJZFqNwbWcSV/aAuBgDiAOGPyhqIqKLa15XOj8TAbO/WxNNrW57wm",
+      "RolID": 1
+    },
+    {
+      "UserCodigo": 2,
+      "UserNombre": "Administrador RRHH",
+      "UserCorreo": "rrhh@empresa.com",
+      "UserPassword": "$2b$10$V2l4NQJ3Vqo6Cdv8VVSeX.keMAZU8HfonD1OqYXXsMeJ92dQqJwQO",
+      "RolID": 1
+    }
+  ]
+}
